@@ -1,0 +1,326 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karavan Market — {{ product.name }}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="{% url 'manifest' %}">
+    <meta name="theme-color" content="#111827">
+
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register("{% url 'service_worker' %}");
+    }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+        .font-mono { font-family: 'IBM Plex Mono', monospace; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; animation: none !important; }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900 h-screen flex flex-col md:flex-row overflow-hidden">
+
+    <div class="md:hidden bg-gray-900 text-white px-4 py-3 flex items-center justify-between shrink-0 border-b border-gray-800">
+        <div class="flex items-center gap-3">
+            <button type="button" onclick="toggleSidebar()" aria-label="Open Menu" class="p-2 text-gray-200 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+            <div>
+                <h2 class="text-base font-bold tracking-wider leading-none">KARAVAN</h2>
+                <p class="text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-0.5">Market</p>
+            </div>
+        </div>
+        <span class="text-xs font-semibold text-gray-300 bg-gray-800 px-3 py-1 rounded-full">Mahsulotlar</span>
+    </div>
+
+    <!-- PERF: removed backdrop-blur-sm (very expensive full-screen blur on old/integrated GPUs) -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-gray-900/60 z-40 hidden md:hidden"></div>
+
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white flex flex-col shrink-0 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
+        <div class="p-5 flex justify-between items-center border-b border-gray-800 md:border-b-0">
+            <div>
+                <h2 class="text-xl font-bold tracking-wider">KARAVAN</h2>
+                <p class="text-xs text-gray-400 uppercase tracking-widest">Market</p>
+            </div>
+            <button type="button" onclick="toggleSidebar()" class="md:hidden p-2 text-gray-400 hover:text-white rounded-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <nav class="flex flex-col px-4 py-4 gap-1.5 overflow-y-auto">
+            <a href="{% url 'dashboard' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Boshqaruv paneli</a>
+            <a href="{% url 'pos' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Kassa</a>
+            <a href="{% url 'products' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white transition">Mahsulotlar</a>
+            <a href="{% url 'expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Firma</a>
+            <a href="{% url 'personal_expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Xarajatlar</a>
+       </nav>
+    </aside>
+
+    <div class="flex-1 min-w-0 flex flex-col overflow-hidden">
+
+        <header class="p-4 md:p-6 shrink-0 bg-white border-b border-gray-200">
+            <a href="{% url 'products' %}" class="text-sm font-medium text-gray-500 hover:text-blue-600 transition inline-flex items-center gap-1 mb-2">
+                &larr; Mahsulotlar
+            </a>
+            <div class="flex items-start justify-between gap-4 flex-wrap">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 leading-tight">{{ product.name }}</h1>
+                    <p class="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                        <span class="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-700 border border-gray-200">Shtrix-kod: {{ product.barcode }}</span>
+                    </p>
+                </div>
+                <div class="flex items-center flex-wrap gap-2">
+                    <button type="button" onclick="openReceiveModal()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition shadow-sm">+ Zaxira qabul qilish</button>
+                    <button type="button" onclick="openArchiveModal()" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition shadow-sm">
+                        {% if product.active %}Arxivlash{% else %}Arxivdan chiqarish{% endif %}
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 items-start">
+                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                    <p class="text-xs uppercase tracking-wider text-gray-500 font-bold mb-3">Narx</p>
+                    <p class="font-mono text-3xl font-bold text-gray-900">{{ product.sales_price }} so'm</p>
+                    <p class="text-sm text-gray-500 mt-1">{% if product.weight_based %}Kg uchun narx{% else %}Dona uchun narx{% endif %}</p>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                    <p class="text-xs uppercase tracking-wider text-gray-500 font-bold mb-3">Tannarxi</p>
+                    <p class="font-mono text-3xl font-bold text-gray-900">{{ product.vendor_cost }} so'm</p>
+                    <p class="text-sm text-gray-500 mt-1">{% if product.weight_based %}Kg uchun narx{% else %}Dona uchun narx{% endif %}</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                    <p class="text-xs uppercase tracking-wider text-gray-500 font-bold">Mavjud</p>
+                    <p class="font-mono text-xl font-bold text-gray-900 mt-1.5">{% if product.weight_based %}{{ product.qty }} kg{% else %}{{ product.qty | floatformat }} dona{% endif %}</p>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                    <p class="text-xs uppercase tracking-wider text-gray-500 font-bold">Shu hafta sotilgan</p>
+                    <p class="font-mono text-xl font-bold text-gray-900 mt-1.5">{% if product.weight_based %}{{ sold_this_week }} kg{% else %}{{ sold_this_week | floatformat }} dona{% endif %}</p>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm col-span-2 sm:col-span-1">
+                    <p class="text-xs uppercase tracking-wider text-gray-500 font-bold">Shu haftalik foyda</p>
+                    <p class="font-mono text-xl font-bold text-gray-900 mt-1.5">{{ days_7_profit | floatformat }} so'm</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 items-start pb-6">
+
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                    <div class="px-5 py-3.5 border-b border-gray-200 bg-gray-50/50">
+                        <p class="text-xs uppercase tracking-wider text-gray-500 font-bold">Sotuv tarixi</p>
+                    </div>
+                    <div id="stockActivityList" class="divide-y divide-gray-100">
+                        {% for item in sale_history %}
+                        <div class="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition">
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">Savdo #{{item.sale.id}}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">{{ item.sale.created_at }}</p>
+                            </div>
+                            <span class="font-mono text-sm font-bold text-red-500">−{% if item.product.weight_based %}{{ item.qty }} kg{% else %}{{ item.qty | floatformat }}{% endif %}</span>
+                        </div>
+                        {% empty %}
+                        <div class="px-5 py-8 text-center">
+                            <p class="text-sm text-gray-500">Hozircha savdolar qayd etilmagan.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                    <div class="px-5 py-3.5 border-b border-gray-200 bg-gray-50/50">
+                        <p class="text-xs uppercase tracking-wider text-gray-500 font-bold">Zaxira to'ldirish tarixi</p>
+                    </div>
+                    <div id="restockHistoryList" class="divide-y divide-gray-100">
+                        {% for item in restock_history %}
+                        <div class="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition">
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">{{ item.reference|default:"Qo'lda o'zgartirish" }}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">{{ item.created_at }}{% if item.paid %} · {{ item.paid | floatformat }} so'm to'landi{% endif %}</p>
+                            </div>
+                            <span class="font-mono text-sm font-bold text-blue-600">+{% if item.product.weight_based %}{{ item.qty }} kg{% else %}{{ item.qty | floatformat }}{% endif %}</span>
+                        </div>
+                        {% empty %}
+                        <div class="px-5 py-8 text-center">
+                            <p class="text-sm text-gray-500">Hozircha zaxira to'ldirishlar qayd etilmagan.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- PERF: modal now uses plain "hidden" toggle instead of opacity/backdrop-blur transition.
+         backdrop-blur-sm forces a full-viewport GPU blur repaint on every open/close -
+         this is the main cause of lag on old/integrated-GPU machines. -->
+    <form method="POST" action="{% url 'restock' product.id %}">{% csrf_token %}
+        <div id="receiveModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div onclick="closeReceiveModal()" class="absolute inset-0 bg-gray-900/60"></div>
+            <div class="relative bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden">
+                <div class="px-6 py-5 border-b border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-900">Zaxira qabul qilish</h3>
+                    <p class="text-xs text-gray-500 mt-1">{{ product.name }} · hozirda <span id="rmCurrentStock" class="font-mono">{{ product.qty }}</span> {% if product.weight_based %}kg{% else %}dona{% endif %}</p>
+                </div>
+
+                <div class="p-6">
+                    <label class="block">
+                        <span class="text-xs font-semibold text-gray-600 mb-1 block uppercase tracking-wider">Qabul qilingan miqdor</span>
+                        <input id="rmQtyInput" name="qty" type="number" min="1" step="1" inputmode="numeric" placeholder="masalan, 25"
+                            class="w-full px-3 py-2.5 rounded-lg border border-gray-300 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                    </label>
+
+                    <div class="mt-4 px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
+                        <span class="text-sm text-gray-600 font-medium">Yangi zaxira jami</span>
+                        <span id="rmNewTotal" class="font-mono text-lg font-bold text-gray-900">{{ product.qty }} {% if product.weight_based %}kg{% else %}dona{% endif %}</span>
+                    </div>
+
+                    <div class="flex gap-3 mt-6">
+                        <button type="button" onclick="closeReceiveModal()" class="flex-1 py-2.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-sm font-medium text-gray-700 transition">Bekor qilish</button>
+                        <button type="submit" class="flex-1 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition shadow-sm">Zaxiraga qo'shish</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+
+    <div id="archiveModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div onclick="closeArchiveModal()" class="absolute inset-0 bg-gray-900/60"></div>
+        <div class="relative bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
+            <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="5" rx="1"></rect>
+                    <path d="M5 9v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9"></path>
+                    <path d="M10 13h4"></path>
+                </svg>
+            </div>
+            
+            {% if product.active %}
+            <h3 class="text-lg font-bold text-gray-900">Ushbu mahsulot arxivlansinmi?</h3>
+            <p class="text-sm text-gray-500 mt-2">
+                <span class="font-medium text-gray-900">{{ product.name }}</span> mahsulotlar ro'yxati va kassadan yashiriladi, ammo uning tarixi va zaxirasi saqlanib qoladi. Keyinroq arxivdan qaytarishingiz mumkin.
+            </p>
+
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="closeArchiveModal()" class="flex-1 py-2.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-sm font-medium text-gray-700 transition">Bekor qilish</button>
+                <a href="{% url 'archive_product' product.id %}" class="flex-1 flex items-center justify-center py-2.5 rounded-lg bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium transition shadow-sm">Arxivlash</a>
+            </div>
+            {% else %}
+            <h3 class="text-lg font-bold text-gray-900">Ushbu mahsulot arxivdan chiqarilsinmi?</h3>
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="closeArchiveModal()" class="flex-1 py-2.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-sm font-medium text-gray-700 transition">Bekor qilish</button>
+                <a href="{% url 'unarchive_product' product.id %}" class="flex-1 flex items-center justify-center py-2.5 rounded-lg bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium transition shadow-sm">Arxivdan chiqarish</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+<script>
+    // TOGGLE SIDEBAR (GAMBURGER)
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
+    }
+
+    let currentStock = parseFloat("{{ product.qty }}") || 0;
+    const fmt0 = n => Math.round(n).toString();
+
+    // PERF: simple hidden/remove-hidden toggle, no opacity transition or backdrop-blur.
+    function openReceiveModal() {
+        document.getElementById('rmCurrentStock').textContent = fmt0(currentStock);
+        document.getElementById('rmQtyInput').value = '';
+        document.getElementById('rmNewTotal').textContent = `${fmt0(currentStock)} {% if product.weight_based %}kg{% else %}dona{% endif %}`;
+
+        document.getElementById('receiveModal').classList.remove('hidden');
+        document.getElementById('rmQtyInput').focus();
+    }
+
+    function closeReceiveModal() {
+        document.getElementById('receiveModal').classList.add('hidden');
+    }
+
+    document.getElementById('rmQtyInput').addEventListener('input', e => {
+        const qty = parseFloat(e.target.value);
+        const total = currentStock + (isNaN(qty) ? 0 : qty);
+        document.getElementById('rmNewTotal').textContent = `${fmt0(total)} {% if product.weight_based %}kg{% else %}dona{% endif %}`;
+    });
+
+    // Submitting the form actually refreshes the page and updates the database, 
+    // so purely frontend dynamic updates for "Zaxira qabul qilindi" are overridden upon reload.
+    // However, we'll keep the frontend update function intact if you decide to convert to AJAX.
+    function confirmReceiveStock() {
+        const qty = parseFloat(document.getElementById('rmQtyInput').value);
+        if (isNaN(qty) || qty <= 0) return;
+
+        currentStock += qty;
+
+        const list = document.getElementById('stockActivityList');
+        const row = document.createElement('div');
+        row.className = 'px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition';
+        row.innerHTML = `
+            <div>
+                <p class="text-sm font-medium text-gray-900">Zaxira qabul qilindi</p>
+                <p class="text-xs text-gray-500 mt-0.5">Qo'lda o'zgartirish · Hozirgina</p>
+            </div>
+            <span class="font-mono text-sm font-bold text-blue-600">+${fmt0(qty)}</span>
+        `;
+        
+        // Remove empty state if it exists
+        if(list.children.length === 1 && list.children[0].classList.contains('text-center')) {
+            list.innerHTML = '';
+        }
+        
+        list.insertBefore(row, list.firstChild);
+        closeReceiveModal();
+    }
+
+
+
+
+    function openArchiveModal() {
+        document.getElementById('archiveModal').classList.remove('hidden');
+    }
+
+    function closeArchiveModal() {
+        document.getElementById('archiveModal').classList.add('hidden');
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            closeReceiveModal();
+            closeArchiveModal();
+        }
+    });
+</script>
+
+</body>
+</html>

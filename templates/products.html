@@ -1,0 +1,331 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karavan Market — Mahsulotlar</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="{% url 'manifest' %}">
+    <meta name="theme-color" content="#111827">
+
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register("{% url 'service_worker' %}");
+    }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        .sort-btn { display: inline-flex; align-items: center; gap: 0.25rem; cursor: pointer; user-select: none; }
+        .sort-btn:hover { color: #111827; }
+        .sort-arrow { font-size: 0.65rem; opacity: 0.3; }
+        .sort-btn[data-active="true"] .sort-arrow { opacity: 1; color: #2563EB; }
+
+        .page-btn[data-active="true"] {
+            background-color: #2563EB;
+            color: #FFFFFF;
+            border-color: #2563EB;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900 antialiased h-screen flex flex-col md:flex-row overflow-hidden">
+
+    <!-- MOBIL UCHUN TOP-BAR (HAMBURGER MENYU) -->
+    <div class="md:hidden bg-gray-900 text-white px-4 py-3 flex items-center justify-between shrink-0 border-b border-gray-800">
+        <div class="flex items-center gap-3">
+            <button type="button" onclick="toggleSidebar()" aria-label="Open Menu" class="p-2 text-gray-200 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+            <div>
+                <h2 class="text-base font-bold tracking-wider leading-none">KARAVAN</h2>
+                <p class="text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-0.5">Market</p>
+            </div>
+        </div>
+        <span class="text-xs font-semibold text-gray-300 bg-gray-800 px-3 py-1 rounded-full">Mahsulotlar</span>
+    </div>
+
+    <!-- MOBIL MENYU FONINI QORAYTIRISH (OVERLAY) -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-gray-900/60 z-40 hidden backdrop-blur-sm transition-opacity md:hidden"></div>
+
+    <!-- YON MENYU (SIDEBAR) -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white flex flex-col shrink-0 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
+        <div class="p-5 flex justify-between items-center border-b border-gray-800 md:border-b-0">
+            <div>
+                <h2 class="text-xl font-bold tracking-wider">KARAVAN</h2>
+                <p class="text-xs text-gray-400 uppercase tracking-widest">Market</p>
+            </div>
+            <button type="button" onclick="toggleSidebar()" class="md:hidden p-2 text-gray-400 hover:text-white rounded-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <nav class="flex flex-col px-4 py-4 gap-1.5 overflow-y-auto">
+            <a href="{% url 'dashboard' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Boshqaruv paneli</a>
+            <a href="{% url 'pos' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Kassa</a>
+            <a href="{% url 'products' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white transition">Mahsulotlar</a>
+            <a href="{% url 'expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Firma</a>
+            <a href="{% url 'personal_expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Xarajatlar</a>
+        </nav>
+    </aside>
+
+    <!-- ASOSIY MASHG'ULOT MAYDONI -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+        
+        <!-- CONTENT CONTAINER WITH UNIFORM PADDING -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-6">
+            
+            <!-- HEADER (TITLE & TOP CONTROLS) -->
+            <div class="flex flex-col gap-4 ">
+                <div class="flex items-center justify-between gap-4 flex-wrap">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900 leading-tight">Mahsulotlar</h1>
+                    </div>
+                    <a href="{% url 'product_add' %}" class="px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition shadow-sm">
+                        + Mahsulot qo'shish
+                    </a>
+                </div>
+
+                <!-- SEARCH INPUT & RESULTS SUMMARY -->
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                    <input id="searchInput" type="text" placeholder="Nomi yoki shtrix-kod bo'yicha qidiring…"
+                        class="w-full sm:max-w-xs px-3.5 py-2 border border-gray-300 rounded-lg text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none transition" autofocus>
+                    <p id="resultsSummary" class="text-xs text-gray-500 font-mono"></p>
+                </div>
+            </div>
+
+            <!-- TABLE CONTAINER -->
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex-1 flex flex-col">
+                <div class="overflow-x-auto flex-1">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                                    <span class="sort-btn" data-sort-key="name" onclick="setSort('name')">Mahsulot <span class="sort-arrow">▲</span></span>
+                                </th>
+                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                                    <span class="sort-btn" data-sort-key="barcode" onclick="setSort('barcode')">Shtrix-kod / PLU <span class="sort-arrow">▲</span></span>
+                                </th>
+                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                                    <span class="sort-btn" data-sort-key="price" onclick="setSort('price')">Narx <span class="sort-arrow">▲</span></span>
+                                </th>
+                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                                    <span class="sort-btn" data-sort-key="qty" onclick="setSort('qty')">Zaxira <span class="sort-arrow">▲</span></span>
+                                </th>
+                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                                    <span class="sort-btn" data-sort-key="status" onclick="setSort('status')">Holat <span class="sort-arrow">▲</span></span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsBody" class="divide-y divide-gray-200 bg-white">
+                            {% for product in products %}
+                            <tr onclick="window.location.href='{% url 'product_detail' product.id %}'" class="product-row hover:bg-gray-50/80 transition cursor-pointer"
+                                data-name="{{ product.name }}"
+                                data-barcode="{{ product.barcode }}"
+                                data-price="{{ product.sales_price }}"
+                                data-qty="{{ product.qty }}"
+                                data-status="{% if product.active %}Active{% else %}Archived{% endif %}">
+                                <td class="px-6 py-3.5 font-medium text-gray-900 hover:text-blue-600 transition">{{ product.name }}</td>
+                                <td class="px-6 py-3.5 font-mono text-gray-500">{{ product.barcode }}</td>
+                                <td class="px-6 py-3.5 font-mono text-gray-900">{{ product.sales_price }} so'm</td>
+                                <td class="px-6 py-3.5 font-mono {% if product.qty == 0 %}text-red-600 font-medium{% else %}text-gray-900{% endif %}">
+                                    {% if product.weight_based %}{{ product.qty }} kg{% else %}{{ product.qty | floatformat }} dona{% endif %}
+                                </td>
+                                <td class="px-6 py-3.5">
+                                    {% if product.active %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                                        Faol
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                        Arxivlangan
+                                    </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+
+                            <tr id="noResultsRow" class="hidden">
+                                <td colspan="5" class="px-6 py-10 text-center text-sm text-gray-500">Qidiruvingizga mos mahsulot topilmadi.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- PAGINATION BAR -->
+                <div id="paginationBar" class="px-6 py-3.5 bg-gray-50 border-t border-gray-200 flex items-center justify-between gap-3 flex-wrap">
+                    <div class="flex items-center gap-2 text-xs text-gray-500">
+                        <span>Sahifadagi qatorlar</span>
+                        <select id="pageSizeSelect" class="font-mono text-xs bg-white border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <option value="20">20</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                    <div id="pageButtons" class="flex items-center gap-1"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    // TOGGLE SIDEBAR (Mobil menyuni ochish/yopish)
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
+    }
+
+    // TABLE & PAGINATION LOGIC
+    const tbody = document.getElementById('productsBody');
+    const noResultsRow = document.getElementById('noResultsRow');
+    const searchInput = document.getElementById('searchInput');
+    const resultsSummary = document.getElementById('resultsSummary');
+    const pageSizeSelect = document.getElementById('pageSizeSelect');
+    const pageButtons = document.getElementById('pageButtons');
+
+    const allRows = Array.from(tbody.querySelectorAll('.product-row'));
+
+    const columnType = {
+        name: 'string',
+        barcode: 'string',
+        price: 'number',
+        qty: 'number',
+        status: 'string',
+    };
+
+    let sortKey = 'qty';
+    let sortDir = 1; // 1 = ascending, -1 = descending
+    let searchTerm = '';
+    let currentPage = 1;
+    let pageSize = 20;
+
+    function setSort(key) {
+        if (sortKey === key) {
+            sortDir *= -1;
+        } else {
+            sortKey = key;
+            sortDir = 1;
+        }
+        currentPage = 1;
+        render();
+    }
+
+    function compareRows(a, b) {
+        const type = columnType[sortKey];
+        let av = a.dataset[sortKey];
+        let bv = b.dataset[sortKey];
+
+        if (type === 'number') {
+            av = parseFloat(av) || 0;
+            bv = parseFloat(bv) || 0;
+            return (av - bv) * sortDir;
+        }
+
+        av = (av || '').toLowerCase();
+        bv = (bv || '').toLowerCase();
+        if (av < bv) return -1 * sortDir;
+        if (av > bv) return 1 * sortDir;
+        return 0;
+    }
+
+    function matchesSearch(row) {
+        if (!searchTerm) return true;
+        const name = row.dataset.name.toLowerCase();
+        const barcode = row.dataset.barcode.toLowerCase();
+        return name.includes(searchTerm) || barcode.includes(searchTerm);
+    }
+
+    function render() {
+        const sorted = [...allRows].sort(compareRows);
+        sorted.forEach(row => tbody.insertBefore(row, noResultsRow));
+
+        document.querySelectorAll('.sort-btn').forEach(btn => {
+            const active = btn.dataset.sortKey === sortKey;
+            btn.dataset.active = active;
+            btn.querySelector('.sort-arrow').textContent = (active && sortDir === -1) ? '▼' : '▲';
+        });
+
+        const filtered = sorted.filter(matchesSearch);
+        noResultsRow.classList.toggle('hidden', filtered.length !== 0);
+
+        const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+
+        allRows.forEach(row => { row.classList.add('hidden'); });
+        filtered.forEach((row, i) => {
+            row.classList.toggle('hidden', !(i >= start && i < end));
+        });
+
+        if (filtered.length === 0) {
+            resultsSummary.textContent = "0 ta natija";
+        } else {
+            resultsSummary.textContent = `${start + 1}–${Math.min(end, filtered.length)} / jami ${filtered.length}`;
+        }
+
+        renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+        pageButtons.innerHTML = '';
+
+        const makeBtn = (label, page, opts = {}) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = label;
+            btn.className = 'page-btn text-xs font-mono px-2.5 py-1.5 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition disabled:opacity-40 disabled:pointer-events-none';
+            btn.disabled = !!opts.disabled;
+            if (opts.active) btn.dataset.active = 'true';
+            btn.onclick = () => { currentPage = page; render(); };
+            return btn;
+        };
+
+        pageButtons.appendChild(makeBtn('‹ Oldingi', currentPage - 1, { disabled: currentPage === 1 }));
+
+        for (let p = 1; p <= totalPages; p++) {
+            if (p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1) {
+                pageButtons.appendChild(makeBtn(String(p), p, { active: p === currentPage }));
+            } else if (Math.abs(p - currentPage) === 2) {
+                const span = document.createElement('span');
+                span.textContent = '…';
+                span.className = 'text-xs text-gray-400 px-1';
+                pageButtons.appendChild(span);
+            }
+        }
+
+        pageButtons.appendChild(makeBtn('Keyingi ›', currentPage + 1, { disabled: currentPage === totalPages }));
+    }
+
+    searchInput.addEventListener('input', e => {
+        searchTerm = e.target.value.trim().toLowerCase();
+        currentPage = 1;
+        render();
+    });
+
+    pageSizeSelect.addEventListener('change', e => {
+        pageSize = parseInt(e.target.value, 10);
+        currentPage = 1;
+        render();
+    });
+
+    render();
+</script>
+
+</body>
+</html>
