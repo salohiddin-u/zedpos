@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+{% load humanize %}
+{% load static %}
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karavan Market — Firma</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="{% url 'manifest' %}">
+    <meta name="theme-color" content="#111827">
+    <!-- In your <head> -->
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+
+<!-- Before </body> -->
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register("{% url 'service_worker' %}");
+    }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .sort-arrow { opacity: 0.3; font-size: 0.75rem; margin-left: 2px; }
+        .sort-btn[data-active="true"] .sort-arrow { opacity: 1; color: #2563eb; }
+        .cat-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #6b7280; }
+        .page-btn[data-active="true"] { background-color: #2563eb; color: white; border-color: #2563eb; }
+        /* Fixed-height body for both the expenses table and the category list so the
+           card height never changes based on how many rows are actually shown */
+        .fixed-card-body { min-height: 460px; }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900 antialiased h-screen flex flex-col md:flex-row overflow-hidden">
+
+    <!-- MOBIL UCHUN FAQAT GAMBURGER TUGMASI BO'LGAN TOP-BAR (Menyular bu yerda ko'rinmaydi) -->
+    <div class="md:hidden bg-gray-900 text-white px-4 py-3 flex items-center justify-between shrink-0 border-b border-gray-800">
+        <div class="flex items-center gap-3">
+            <!-- HAMBURGER ICON BUTTON -->
+            <button type="button" onclick="toggleSidebar()" aria-label="Open Menu" class="p-2 text-gray-200 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+            <div>
+                <h2 class="text-base font-bold tracking-wider leading-none">KARAVAN</h2>
+                <p class="text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-0.5">Market</p>
+            </div>
+        </div>
+        <span class="text-xs font-semibold text-gray-300 bg-gray-800 px-3 py-1 rounded-full">Firma</span>
+    </div>
+
+    <!-- MOBIL MENYU FONINI QORAYTIRISH (OVERLAY) -->
+    <!-- PERF: removed backdrop-blur-sm + transition-opacity (expensive full-screen GPU blur on old PCs) -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-gray-900/60 z-40 hidden md:hidden"></div>
+
+    <!-- YON MENYU (SIDEBAR - Telefonda yashiringan, Gamburger bosilsa chiqadi) -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white flex flex-col shrink-0 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
+        <div class="p-5 flex justify-between items-center border-b border-gray-800 md:border-b-0">
+            <div>
+                <h2 class="text-xl font-bold tracking-wider">KARAVAN</h2>
+                <p class="text-xs text-gray-400 uppercase tracking-widest">Market</p>
+            </div>
+            <!-- Menyuni yopish tugmasi (X) -->
+            <button type="button" onclick="toggleSidebar()" class="md:hidden p-2 text-gray-400 hover:text-white rounded-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- BARCHA NAVIGATSIYA HAVOLALARI FAQAT SHU YERDA -->
+        <nav class="flex flex-col px-4 py-4 gap-1.5 overflow-y-auto">
+            <a href="{% url 'dashboard' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Boshqaruv paneli</a>
+            <a href="{% url 'pos' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Kassa</a>
+            <a href="{% url 'products' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Mahsulotlar</a>
+            <a href="{% url 'expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white transition">Firma</a>
+            <a href="{% url 'personal_expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Xarajatlar</a>
+            
+        </nav>
+    </aside>
+
+    <!-- ASOSIY MASHG'ULOT MAYDONI -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+        
+        <!-- PAGE HEADER -->
+        <header class="bg-white border-b border-gray-200 p-4 md:p-6 shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Firma</h1>
+                <p class="text-sm text-gray-500">{{ today }}</p>
+            </div>
+            <div class="flex gap-2 w-full sm:w-auto">
+                <button type="button" onclick="openModal('addCategoryModal')" class="flex-1 sm:flex-none justify-center items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition">
+                    + Kategoriya
+                </button>
+                <button type="button" onclick="openModal('addExpenseModal')" class="flex-1 sm:flex-none justify-center items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
+                    + Xarajat
+                </button>
+            </div>
+        </header>
+
+        <!-- KARTALAR VA JADVAL -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+
+            <!-- STATISTIKA KARTALARI -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <p class="text-xs text-gray-500 font-medium uppercase">Bugun</p>
+                    <p class="text-xl md:text-2xl font-bold mt-1">{{ todays_expenses|intcomma }} so'm</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <p class="text-xs text-gray-500 font-medium uppercase">7 kun</p>
+                    <p class="text-xl md:text-2xl font-bold mt-1">{{ weekly_expenses|intcomma }} so'm</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <p class="text-xs text-gray-500 font-medium uppercase">Oy</p>
+                    <p class="text-xl md:text-2xl font-bold mt-1">{{ month_expenses|intcomma }} so'm</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <p class="text-xs text-gray-500 font-medium uppercase">{{ category_most_expenses.category__name|default:"Eng ko'p" }}</p>
+                    <p class="text-xl md:text-2xl font-bold mt-1 text-red-600">{{ category_most_expenses.total|intcomma|default:"0" }} so'm</p>
+                </div>
+            </div>
+
+            <!-- FILTR -->
+            <form method="GET" action="{% url 'expenses' %}" class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row flex-wrap items-end gap-4">
+                {% csrf_token %}
+                <div class="w-full sm:w-auto flex-1 sm:flex-none">
+                    <label class="block text-xs text-gray-500 mb-1">Boshlanish</label>
+                    <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div class="w-full sm:w-auto flex-1 sm:flex-none">
+                    <label class="block text-xs text-gray-500 mb-1">Tugash</label>
+                    <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div class="w-full sm:w-auto flex-1">
+                    <label class="block text-xs text-gray-500 mb-1">Kategoriya</label>
+                    <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                        <option value="">Barchasi</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button type="submit" class="flex-1 sm:flex-none px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 transition">Filtrlash</button>
+                    <a href="{% url 'expenses' %}" class="flex-1 sm:flex-none px-4 py-2 text-center bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Tozalash</a>
+                </div>
+            </form>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                
+                <!-- JADVAL -->
+                <div class="lg:col-span-2 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+                    <div class="p-4 border-b border-gray-200 flex justify-between items-center gap-4 h-[58px]">
+                        <input id="searchInput" type="text" placeholder="Qidirish..." class="w-full max-w-xs px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <span id="resultsSummary" class="text-xs text-gray-500 font-medium"></span>
+                    </div>
+
+                    <div class="overflow-x-auto fixed-card-body">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-gray-50 text-gray-500 text-xs uppercase border-b border-gray-200">
+                                <tr>
+                                    <th class="px-4 py-3 font-medium cursor-pointer select-none sort-btn" data-sort-key="date" onclick="setSort('date')">Sana <span class="sort-arrow">▲</span></th>
+                                    <th class="px-4 py-3 font-medium cursor-pointer select-none sort-btn" data-sort-key="amount" onclick="setSort('amount')">Summa <span class="sort-arrow">▲</span></th>
+                                    <th class="px-4 py-3 font-medium cursor-pointer select-none sort-btn" data-sort-key="category" onclick="setSort('category')">Kategoriya <span class="sort-arrow">▲</span></th>
+                                    <th class="px-4 py-3 font-medium cursor-pointer select-none sort-btn" data-sort-key="note" onclick="setSort('note')">Tavsif <span class="sort-arrow">▲</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="expensesBody" class="divide-y divide-gray-100">
+                                {% for expense in expenses %}
+                                <tr class="expense-row hover:bg-gray-50 transition"
+                                    data-date="{{ expense.created_at|date:'Y-m-d' }}"
+                                    data-amount="{{ expense.expense }}"
+                                    data-category="{{ expense.category }}"
+                                    data-note="{{ expense.note|default:'' }}">
+                                    <td class="px-4 py-3 text-gray-500 whitespace-nowrap">{{ expense.created_at|date:"d.m.Y" }}</td>
+                                    <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{{ expense.expense|intcomma }} so'm</td>
+                                    <td class="px-4 py-3">
+                                        <span class="inline-flex items-center gap-1.5 text-gray-700">
+                                            <span class="cat-dot"></span>{{ expense.category }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-gray-500 truncate max-w-[150px]">{{ expense.note|default:"—" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr id="emptyDbRow"><td colspan="4" class="px-4 py-8 text-center text-gray-400">Firma mavjud emas</td></tr>
+                                {% endfor %}
+                                <tr id="noResultsRow" class="hidden">
+                                    <td colspan="4" class="px-4 py-8 text-center text-gray-400">Filtrga mos kelmadi</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="p-4 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4 sm:h-[68px]">
+                        <div class="flex items-center gap-2 text-sm text-gray-500">
+                            <span>Qatorlar:</span>
+                            <select id="pageSizeSelect" class="bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+                        <div id="pageButtons" class="flex items-center gap-1"></div>
+                    </div>
+                </div>
+
+                <!-- KATEGORIYALAR -->
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+                    <div class="p-4 border-b border-gray-200 flex justify-between items-center gap-4 h-[58px]">
+                        <h3 class="font-bold text-gray-900 whitespace-nowrap">Kategoriyalar</h3>
+                        <div class="flex items-center gap-3">
+                            <span id="categoryResultsSummary" class="text-xs text-gray-500 font-medium"></span>
+                            <button type="button" onclick="openModal('addCategoryModal')" class="text-sm text-blue-600 hover:underline whitespace-nowrap">+ Yangi</button>
+                        </div>
+                    </div>
+                    <div class="fixed-card-body overflow-y-auto">
+                        <ul id="categoryList" class="divide-y divide-gray-100">
+                            {% for cat in expenses_by_category %}
+                            <li class="category-row px-4 py-3 flex justify-between items-center hover:bg-gray-50 cursor-pointer transition" onclick="window.location.href='{% url 'category_detail' cat.id %}'">
+                                <span class="text-sm font-medium text-gray-700 inline-flex items-center gap-2">
+                                    <span class="cat-dot"></span>{{ cat.name }}
+                                </span>
+                                <span class="text-sm font-bold text-gray-900">{{ cat.total|intcomma }}</span>
+                            </li>
+                            {% empty %}
+                            <li class="p-4 text-center text-gray-400 text-sm">Ma'lumot yo'q</li>
+                            {% endfor %}
+                        </ul>
+                        <p id="categoryNoResults" class="hidden p-4 text-center text-gray-400 text-sm">Kategoriya topilmadi</p>
+                    </div>
+                    <div class="p-4 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4 sm:h-[68px]">
+                        <div class="flex items-center gap-2 text-sm text-gray-500">
+                            <span>Qatorlar:</span>
+                            <select id="categoryPageSizeSelect" class="bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none">
+                                <option value="6">6</option>
+                                <option value="10" selected>10</option>
+                                <option value="20">20</option>
+                            </select>
+                        </div>
+                        <div id="categoryPageButtons" class="flex items-center gap-1"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+    <!-- MODALLAR -->
+    <!-- PERF: removed backdrop-blur-sm -->
+    <div id="addExpenseModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden" onclick="event.stopPropagation()">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 class="text-lg font-bold">Xarajat qo'shish</h3>
+                <button onclick="closeModal('addExpenseModal')" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            <form method="POST" action="{% url 'add_firm_expense' %}" class="p-4 space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">Sana</label>
+                    <input type="date" name="date" value="{% now 'Y-m-d' %}" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">Kategoriya</label>
+                    
+                    <select id="expenseCategorySelect" name="category" required class="w-full">
+                    <option value="" disabled selected>Search category...</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">Summa (so'm)</label>
+                    <input type="number" name="amount" min="0" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">Tavsif (ixtiyoriy)</label>
+                    <input type="text" name="note" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div class="pt-4 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('addExpenseModal')" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm">Bekor qilish</button>
+                    <button type="submit" class="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PERF: removed backdrop-blur-sm -->
+    <div id="addCategoryModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden" onclick="event.stopPropagation()">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 class="text-lg font-bold">Kategoriya qo'shish</h3>
+                <button onclick="closeModal('addCategoryModal')" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            <form method="POST" action="{% url 'add_category' %}" class="p-4 space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">Kategoriya nomi</label>
+                    <input id="categoryName" type="text" name="name" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div class="pt-4 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('addCategoryModal')" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm">Bekor qilish</button>
+                    <button type="submit" class="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+<script>
+  new TomSelect("#expenseCategorySelect", {
+    create: false,
+    sortField: {
+      field: "text",
+      direction: "asc"
+    },
+    placeholder: "Search or select category..."
+  });
+</script>
+<script>
+    // TOGGLE SIDEBAR (Gamburger bossa menyuni ochadi/yopadi)
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
+    }
+    function guardAgainstDoubleSubmit(form) {
+    if (!form) return;
+    form.addEventListener('submit', () => {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saqlanmoqda...';
+        }
+    });
+}
+
+    guardAgainstDoubleSubmit(document.querySelector('#addExpenseModal form'));
+    guardAgainstDoubleSubmit(document.querySelector('#addCategoryModal form'));
+    // Modal
+    // Updated openModal function
+    function openModal(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        
+        modal.classList.remove('hidden');
+
+        // If opening the category modal, focus and select the input after it becomes visible
+        if (id === 'addCategoryModal') {
+            setTimeout(() => {
+                const inputElement = document.getElementById('categoryName');
+                if (inputElement) {
+                    inputElement.focus();
+                    inputElement.select();
+                }
+            }, 50); // 50ms delay gives the browser time to render the visible modal
+        }
+    }
+
+    const closeModal = id => document.getElementById(id).classList.add('hidden');
+
+    // Jadval JS mantiqlari
+    const rows = Array.from(document.querySelectorAll('.expense-row'));
+    const tbody = document.getElementById('expensesBody');
+    const noResultsRow = document.getElementById('noResultsRow');
+    const searchInput = document.getElementById('searchInput');
+    const resultsSummary = document.getElementById('resultsSummary');
+    const pageSizeSelect = document.getElementById('pageSizeSelect');
+    const pageButtons = document.getElementById('pageButtons');
+
+    const columnType = { date: 'string', amount: 'number', category: 'string', note: 'string' };
+    let sortKey = 'date', sortDir = -1, search = '', page = 1, pageSize = 10;
+
+    function setSort(key) {
+        sortDir = (sortKey === key) ? sortDir * -1 : 1;
+        sortKey = key;
+        page = 1;
+        render();
+    }
+
+    function render() {
+        if (!rows.length) return;
+
+        const sorted = [...rows].sort((a, b) => {
+            let av = a.dataset[sortKey], bv = b.dataset[sortKey];
+            if (columnType[sortKey] === 'number') return ((+av || 0) - (+bv || 0)) * sortDir;
+            av = (av || '').toLowerCase(); bv = (bv || '').toLowerCase();
+            return av < bv ? -sortDir : av > bv ? sortDir : 0;
+        });
+        sorted.forEach(row => tbody.insertBefore(row, noResultsRow));
+
+        document.querySelectorAll('.sort-btn').forEach(btn => {
+            const active = btn.dataset.sortKey === sortKey;
+            btn.dataset.active = active;
+            btn.querySelector('.sort-arrow').textContent = (active && sortDir === -1) ? '▼' : '▲';
+        });
+
+        const filtered = sorted.filter(row =>
+            !search || (row.dataset.note + row.dataset.category).toLowerCase().includes(search)
+        );
+        noResultsRow.classList.toggle('hidden', filtered.length !== 0);
+
+        const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+        page = Math.min(page, totalPages);
+        const start = (page - 1) * pageSize, end = start + pageSize;
+
+        rows.forEach(row => row.classList.add('hidden'));
+        filtered.forEach((row, i) => row.classList.toggle('hidden', !(i >= start && i < end)));
+
+        resultsSummary.textContent = filtered.length
+            ? `${start + 1}–${Math.min(end, filtered.length)} / ${filtered.length}`
+            : '0 natija';
+
+        renderPagination(totalPages);
+    }
+    function filterCategoryDropdown() {
+        const query = document.getElementById('categorySearchInput').value.toLowerCase();
+        const select = document.getElementById('expenseCategorySelect');
+        const options = select.options;
+
+        for (let i = 0; i < options.length; i++) {
+            const txt = options[i].text.toLowerCase();
+            // Agar matn mos kelsa ko'rsatiladi, aks holda yashiriladi
+            if (txt.includes(query)) {
+                options[i].style.display = '';
+            } else {
+                options[i].style.display = 'none';
+            }
+        }
+
+        // Agar qidiruvga mos birinchi element ko'rinmay qolsa, ko'rinib turgan birinchisini tanlash uchun mantiq
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].style.display !== 'none') {
+                select.selectedIndex = i;
+                break;
+            }
+        }
+    }
+    
+    function renderPagination(totalPages) {
+        pageButtons.innerHTML = '';
+        const btn = (label, target, opts = {}) => {
+            const b = document.createElement('button');
+            b.type = 'button'; b.textContent = label; b.disabled = !!opts.disabled;
+            if (opts.active) b.dataset.active = 'true';
+            
+            b.className = 'page-btn w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition';
+            
+            b.onclick = () => { page = target; render(); };
+            pageButtons.appendChild(b);
+        };
+        
+        btn('‹', page - 1, { disabled: page === 1 });
+        for (let p = 1; p <= totalPages; p++) {
+            if (p === 1 || p === totalPages || Math.abs(p - page) <= 1) {
+                btn(String(p), p, { active: p === page });
+            } else if (Math.abs(p - page) === 2) {
+                const s = document.createElement('span'); 
+                s.textContent = '…'; 
+                s.className = 'px-1 text-gray-400'; 
+                pageButtons.appendChild(s);
+            }
+        }
+        btn('›', page + 1, { disabled: page === totalPages });
+    }
+
+    searchInput?.addEventListener('input', e => { search = e.target.value.trim().toLowerCase(); page = 1; render(); });
+    pageSizeSelect?.addEventListener('change', e => { pageSize = +e.target.value; page = 1; render(); });
+
+    render();
+
+    // Kategoriyalar ro'yxati uchun paginatsiya
+    const categoryRows = Array.from(document.querySelectorAll('.category-row'));
+    const categoryNoResults = document.getElementById('categoryNoResults');
+    const categoryResultsSummary = document.getElementById('categoryResultsSummary');
+    const categoryPageButtons = document.getElementById('categoryPageButtons');
+    const categoryPageSizeSelect = document.getElementById('categoryPageSizeSelect');
+    let categoryPageSize = categoryPageSizeSelect ? +categoryPageSizeSelect.value : 6;
+    let categoryPage = 1;
+
+    function renderCategoryPage() {
+        if (!categoryRows.length) {
+            categoryResultsSummary.textContent = '';
+            categoryPageButtons.innerHTML = '';
+            return;
+        }
+
+        const totalPages = Math.max(1, Math.ceil(categoryRows.length / categoryPageSize));
+        categoryPage = Math.min(Math.max(categoryPage, 1), totalPages);
+        const start = (categoryPage - 1) * categoryPageSize;
+        const end = start + categoryPageSize;
+
+        categoryRows.forEach((row, i) => row.classList.toggle('hidden', !(i >= start && i < end)));
+        categoryNoResults.classList.add('hidden');
+
+        categoryResultsSummary.textContent = `${start + 1}–${Math.min(end, categoryRows.length)} / ${categoryRows.length}`;
+
+        renderCategoryPagination(totalPages);
+    }
+
+    function renderCategoryPagination(totalPages) {
+        categoryPageButtons.innerHTML = '';
+        if (totalPages <= 1) return;
+
+        const btn = (label, target, opts = {}) => {
+            const b = document.createElement('button');
+            b.type = 'button'; b.textContent = label; b.disabled = !!opts.disabled;
+            if (opts.active) b.dataset.active = 'true';
+
+            b.className = 'page-btn w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition';
+
+            b.onclick = () => { categoryPage = target; renderCategoryPage(); };
+            categoryPageButtons.appendChild(b);
+        };
+
+        btn('‹', categoryPage - 1, { disabled: categoryPage === 1 });
+        for (let p = 1; p <= totalPages; p++) {
+            if (p === 1 || p === totalPages || Math.abs(p - categoryPage) <= 1) {
+                btn(String(p), p, { active: p === categoryPage });
+            } else if (Math.abs(p - categoryPage) === 2) {
+                const s = document.createElement('span');
+                s.textContent = '…';
+                s.className = 'px-1 text-gray-400';
+                categoryPageButtons.appendChild(s);
+            }
+        }
+        btn('›', categoryPage + 1, { disabled: categoryPage === totalPages });
+    }
+
+    renderCategoryPage();
+    categoryPageSizeSelect?.addEventListener('change', e => { categoryPageSize = +e.target.value; categoryPage = 1; renderCategoryPage(); });
+</script>
+
+</body>
+</html>

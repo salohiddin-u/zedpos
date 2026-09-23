@@ -1,0 +1,833 @@
+{% load l10n %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karavan Market — Kassa</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="{% url 'manifest' %}">
+    <meta name="theme-color" content="#111827">
+
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register("{% url 'service_worker' %}");
+    }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+        .font-mono { font-family: 'IBM Plex Mono', monospace; }
+        
+        /* Torn-ticket edge, colored to match the gray-100 column behind the ticket */
+        .ticket-notch { position: relative; }
+        .ticket-notch::before,
+        .ticket-notch::after {
+            content: "";
+            position: absolute;
+            left: 0; right: 0;
+            height: 11px;
+            background:
+                linear-gradient(-45deg, #f3f4f6 8px, transparent 0) 0 0/16px 16px,
+                linear-gradient(45deg, #f3f4f6 8px, transparent 0) 0 0/16px 16px;
+            background-repeat: repeat-x;
+        }
+        .ticket-notch::before { top: -1px; }
+        .ticket-notch::after  { bottom: -1px; transform: scaleY(-1); }
+
+        .dash-divider { border-top: 2px dashed #e5e7eb; } /* gray-200 */
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 999px; } /* gray-300 */
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; } /* gray-400 */
+
+        .qty-btn:active { transform: scale(0.92); }
+        .product-card:active { transform: scale(0.98); }
+
+        #toast { transition: transform 0.35s ease, opacity 0.35s ease; }
+        #toast[data-show="false"] { transform: translateY(16px); opacity: 0; pointer-events: none; }
+        #toast[data-show="true"]  { transform: translateY(0);    opacity: 1; }
+        #toast[data-variant="error"] { background-color: #ef4444; } /* red-500 */
+
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; animation: none !important; }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900 h-screen flex flex-col md:flex-row overflow-hidden">
+
+    <div class="md:hidden bg-gray-900 text-white px-4 py-3 flex items-center justify-between shrink-0 border-b border-gray-800">
+        <div class="flex items-center gap-3">
+            <button type="button" onclick="toggleSidebar()" aria-label="Open Menu" class="p-2 text-gray-200 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+            <div>
+                <h2 class="text-base font-bold tracking-wider leading-none">KARAVAN</h2>
+                <p class="text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-0.5">Market</p>
+            </div>
+        </div>
+        <span class="text-xs font-semibold text-gray-300 bg-gray-800 px-3 py-1 rounded-full">Kassa</span>
+    </div>
+
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-gray-900/60 z-40 hidden backdrop-blur-sm transition-opacity md:hidden"></div>
+
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white flex flex-col shrink-0 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
+        <div class="p-5 flex justify-between items-center border-b border-gray-800 md:border-b-0">
+            <div>
+                <h2 class="text-xl font-bold tracking-wider">KARAVAN</h2>
+                <p class="text-xs text-gray-400 uppercase tracking-widest">Market</p>
+            </div>
+            <button type="button" onclick="toggleSidebar()" class="md:hidden p-2 text-gray-400 hover:text-white rounded-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <nav class="flex flex-col px-4 py-4 gap-1.5 overflow-y-auto">
+            <a href="{% url 'dashboard' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Boshqaruv paneli</a>
+            <a href="{% url 'pos' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white transition">Kassa</a>
+            <a href="{% url 'products' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Mahsulotlar</a>
+            <a href="{% url 'expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Firma</a>
+            <a href="{% url 'personal_expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Xarajatlar</a>
+
+        </nav>
+    </aside>
+
+    <div class="flex-1 flex flex-col lg:flex-row min-w-0 overflow-hidden">
+
+        <div class="shrink-0 lg:flex-1 flex flex-col min-w-0 overflow-hidden">
+            
+            <header class="p-4 md:p-6 shrink-0 bg-white border-b border-gray-200">
+                <div class="flex items-start justify-between gap-6 flex-wrap">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900 leading-tight">Kassa</h1>
+                        <p id="todayDate" class="text-sm text-gray-500 mt-1"></p>
+                    </div>
+                    <span id="clock" class="font-mono text-sm text-gray-500 hidden sm:block bg-gray-100 px-3 py-1.5 rounded-lg"></span>
+                </div>
+
+                <div class="mt-4 max-w-xl">
+                    <input id="searchInput" type="text" autofocus autocomplete="off"
+                        placeholder="Shtrix-kodni skanerlang yoki nomini kiriting..."
+                        class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition placeholder:text-gray-400">
+                </div>
+            </header>
+
+            <div id="productGrid" class="hidden lg:grid flex-1 overflow-y-auto p-4 md:p-6 grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 content-start bg-gray-50">
+
+                <div id="noMatches" class="hidden col-span-full flex flex-col items-center justify-center text-center py-20 text-gray-400">
+                    <p class="text-sm font-medium">Mos mahsulot topilmadi</p>
+                </div>
+
+                {% for product in products %}
+{% if product.weight_based %}
+<div role="button" tabindex="0"
+    data-id="{{product.id}}"
+    data-name="{{product.name|lower}}"
+    data-display-name="{{product.name}}"
+    data-price="{{product.sales_price|unlocalize|default:0}}"
+    data-barcode="{{product.barcode}}"
+    data-weight="1"
+    onclick="openWeightModal(this.dataset.id, this.dataset.displayName, parseFloat(this.dataset.price), this.dataset.barcode)"
+    class="product-card cursor-pointer relative text-left bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-2 hover:border-blue-500 hover:shadow-md transition">
+    
+    <!-- PIN BUTTON START -->
+    <button type="button" onclick="pinProduct(event, '{{ product.id }}')" class="absolute top-2 right-2 text-gray-300 hover:text-blue-600 p-1 z-10 transition focus:outline-none" title="Qistirish">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+        </svg>
+    </button>
+    <!-- PIN BUTTON END -->
+
+    <span class="card-badge hidden absolute -top-2 -right-2 px-2 h-6 rounded-full text-[10px] bg-blue-600 text-white font-mono font-bold items-center justify-center shadow"></span>
+    <p class="text-sm font-semibold text-gray-900 leading-snug pr-6">{{product.name}}</p>
+    <p class="text-[11px] text-gray-400 font-mono">{{product.barcode}}</p>
+    <p class="stock-label text-[11px] {% if product.qty == 0 %}text-red-600{% else %}text-gray-500{% endif %} font-mono" data-unit="kg">Qoldiq: {{product.qty}} kg</p>
+    <p class="font-mono text-sm font-bold text-gray-900 mt-auto pt-1">{{ product.sales_price|unlocalize }} so'm/kg</p>
+</div>
+{% else %}
+<div role="button" tabindex="0"
+    data-id="{{product.id}}"
+    data-name="{{product.name|lower}}"
+    data-display-name="{{product.name}}"
+    data-price="{{product.sales_price|unlocalize|default:0}}"
+    data-barcode="{{product.barcode}}"
+    onclick="addToCart(this.dataset.id, this.dataset.displayName, parseFloat(this.dataset.price), this.dataset.barcode)"
+    class="product-card cursor-pointer relative text-left bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-2 hover:border-blue-500 hover:shadow-md transition">
+    
+    <!-- PIN BUTTON START -->
+    <button type="button" onclick="pinProduct(event, '{{ product.id }}')" class="absolute top-2 right-2 p-1 z-10 transition focus:outline-none {% if product.pinned %}text-blue-600{% else %}text-gray-300 hover:text-blue-600{% endif %}" title="Qistirish">
+    <svg class="w-5 h-5 {% if product.pinned %}fill-current{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+    </svg>
+</button>
+    <!-- PIN BUTTON END -->
+
+    <span class="card-badge hidden absolute -top-2 -right-2 min-w-[1.5rem] h-6 px-1.5 rounded-full text-[11px] bg-blue-600 text-white font-mono font-bold items-center justify-center shadow"></span>
+    <p class="text-sm font-semibold text-gray-900 leading-snug pr-6">{{product.name}}</p>
+    <p class="text-[11px] text-gray-400 font-mono">{{product.barcode}}</p>
+    <p class="stock-label text-[11px] {% if product.qty == 0 %}text-red-600{% else %}text-gray-500{% endif %} font-mono" data-unit="unit">Qoldiq: {{product.qty | floatformat}}</p>
+    <p class="font-mono text-sm font-bold text-gray-900 mt-auto pt-1">{{ product.sales_price }} so'm</p>
+</div>
+{% endif %}
+{% endfor %}
+
+            </div>
+        </div>
+
+        <form id="saleForm" method="POST" action="{% url 'pos' %}" class="w-full lg:w-[26rem] flex-1 lg:flex-none flex flex-col border-t lg:border-t-0 lg:border-l border-gray-200 bg-gray-100 z-10">
+            {% csrf_token %}
+            <div class="flex-1 flex flex-col p-4 md:p-6 min-h-0">
+                <div class="flex-1 min-h-0 bg-white rounded-xl shadow-sm border border-gray-200 ticket-notch flex flex-col overflow-hidden">
+                    
+                    <div class="px-5 pt-5 pb-3 shrink-0">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-0.5">Savdo</p>
+                            </div>
+                            <button type="button" onclick="clearOrder()" id="clearBtn" class="text-xs font-semibold text-red-500 hover:text-red-600 hidden bg-red-50 px-2.5 py-1.5 rounded-lg transition">Tozalash</button>
+                        </div>
+                    </div>
+
+                    <div id="tabBar" class="flex items-center gap-1.5 px-5 pb-3 overflow-x-auto shrink-0"></div>
+
+                    <div class="dash-divider mx-5"></div>
+
+                    <div id="cartItems" class="flex-1 overflow-y-auto px-5 py-2 min-h-0"></div>
+
+                    <div class="dash-divider mx-5"></div>
+
+                    <div class="px-5 py-4 shrink-0 bg-gray-50/50">
+                        <div class="flex justify-between items-baseline">
+                            <span class="text-sm font-bold text-gray-500 uppercase tracking-wider">Jami</span>
+                            <span id="totalAmt" class="font-mono text-2xl font-bold text-gray-900">0 so'm</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="shrink-0 pt-4">
+                    <button type="button" id="chargeBtn" onclick="submitSale()"
+                        class="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                        To'lov <span id="chargeAmt" class="ml-1 opacity-90 font-mono text-base font-medium">0 so'm</span>
+                    </button>
+                </div>
+            </div>
+            <div id="cartFields"></div>
+        </form>
+    </div>
+
+    <div id="toast" data-show="false" class="fixed bottom-6 right-6 bg-gray-900 text-white px-5 py-3.5 rounded-xl shadow-lg z-50">
+        <span id="toastText" class="text-sm font-medium"></span>
+    </div>
+
+    <div id="weightModal" data-show="false" class="fixed inset-0 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+        <div onclick="closeWeightModal()" class="absolute inset-0 bg-gray-900/60 "></div>
+        <div class="relative bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden">
+            <div class="px-6 py-5 border-b border-gray-200">
+                <h3 id="wmName" class="text-lg font-bold text-gray-900">Mahsulot nomi</h3>
+                <p id="wmMeta" class="text-xs text-gray-500 font-mono mt-1">PLU 0000 · 0 so'm/kg</p>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <label class="block">
+                        <span class="text-xs font-semibold text-gray-600 mb-1 block">Summa</span>
+                        <input id="wmAmountInput" type="number" min="0" step="0.01" inputmode="decimal"
+                            class="w-full px-3 py-2.5 rounded-lg border border-gray-300 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                    </label>
+                    <label class="block">
+                        <span class="text-xs font-semibold text-gray-600 mb-1 block">Og'irlik</span>
+                        <input id="wmWeightInput" type="number" min="0" step="0.01" inputmode="decimal"
+                            class="w-full px-3 py-2.5 rounded-lg border border-gray-300 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                    </label>
+                </div>
+
+                <div class="flex gap-2 mt-4">
+                    <button type="button" onclick="applyWeightPreset(0.25)" class="flex-1 text-xs font-mono py-1.5 rounded-md border border-gray-200 bg-gray-50 hover:bg-gray-100 transition">0.25 kg</button>
+                    <button type="button" onclick="applyWeightPreset(0.5)" class="flex-1 text-xs font-mono py-1.5 rounded-md border border-gray-200 bg-gray-50 hover:bg-gray-100 transition">0.5 kg</button>
+                    <button type="button" onclick="applyWeightPreset(1)" class="flex-1 text-xs font-mono py-1.5 rounded-md border border-gray-200 bg-gray-50 hover:bg-gray-100 transition">1 kg</button>
+                </div>
+
+                <div class="flex gap-3 mt-6">
+                    <button type="button" onclick="closeWeightModal()" class="flex-1 py-2.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-sm font-medium text-gray-700 transition">Bekor qilish</button>
+                    <button type="button" onclick="confirmWeight()" class="flex-1 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition shadow-sm">Qo'shish</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.toggle('-translate-x-full');
+    overlay.classList.toggle('hidden');
+}
+
+const fmt = n => Math.round(n).toLocaleString('en-US').replace(/,/g, ' ') + " so'm";
+
+// ---- Multi-customer tabs ----
+// Each tab holds its own independent cart, so the cashier can start a
+// second (or third) customer's order without losing the first one.
+// Tabs are intentionally IN-MEMORY ONLY — nothing is written to
+// localStorage, so every page refresh (or navigating away and back)
+// always starts clean with a single empty "Mijoz 1" tab. This avoids a
+// stale/forgotten cart silently reappearing for the wrong customer.
+
+let tabs = [{ id: 1, name: 'Mijoz 1', cart: [] }];
+let activeTabId = 1;
+let nextTabId = 2;
+
+function getActiveTab() {
+    return tabs.find(t => t.id === activeTabId) || tabs[0];
+}
+function getActiveCart() {
+    return getActiveTab().cart;
+}
+
+// No-op stubs kept so existing call sites don't need to change.
+function saveTabs() { /* intentionally not persisted */ }
+function loadTabs() { /* intentionally not persisted — always start fresh */ }
+
+function addTab() {
+    const tab = { id: nextTabId++, name: `Mijoz ${tabs.length + 1}`, cart: [] };
+    tabs.push(tab);
+    activeTabId = tab.id;
+    renderCart();
+    refreshAllBadges();
+    saveTabs();
+    refocusSearch();
+}
+
+function switchTab(id) {
+    if (id === activeTabId) return;
+    activeTabId = id;
+    renderCart();
+    refreshAllBadges();
+    saveTabs();
+    refocusSearch();
+}
+
+function closeTab(id) {
+    const tab = tabs.find(t => t.id === id);
+    if (!tab || tabs.length <= 1) return;
+    if (tab.cart.length > 0 && !confirm(`"${tab.name}" savdosida mahsulotlar bor. Yopilsinmi?`)) {
+        refocusSearch();
+        return;
+    }
+    tabs = tabs.filter(t => t.id !== id);
+    if (activeTabId === id) activeTabId = tabs[0].id;
+    renderCart();
+    refreshAllBadges();
+    saveTabs();
+    refocusSearch();
+}
+
+function finishTabAfterSale() {
+    if (tabs.length > 1) {
+        const idx = tabs.findIndex(t => t.id === activeTabId);
+        tabs = tabs.filter(t => t.id !== activeTabId);
+        const nextIdx = Math.min(idx, tabs.length - 1);
+        activeTabId = tabs[nextIdx].id;
+    } else {
+        getActiveTab().cart = [];
+    }
+}
+
+function renderTabs() {
+    const el = document.getElementById('tabBar');
+    el.innerHTML = tabs.map(t => {
+        const count = t.cart.reduce((s, c) => s + (c.unit === 'kg' ? 1 : c.qty), 0);
+        const active = t.id === activeTabId;
+        return `
+        <div class="flex items-center shrink-0">
+            <button type="button" data-tab-id="${t.id}" class="tab-select-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${active ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
+                <span>${escapeHtml(t.name)}</span>
+                ${count > 0 ? `<span class="font-mono ${active ? 'text-blue-100' : 'text-gray-400'}">${count}</span>` : ''}
+            </button>
+            ${tabs.length > 1 ? `<button type="button" data-close-tab-id="${t.id}" class="tab-close-btn -ml-1 mr-1 w-5 h-5 flex items-center justify-center text-gray-300 hover:text-red-500 text-sm leading-none">&times;</button>` : ''}
+        </div>`;
+    }).join('') + `
+        <button type="button" id="addTabBtn" class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg border border-dashed border-gray-300 text-gray-400 hover:text-blue-600 hover:border-blue-400 transition" title="Yangi mijoz">+</button>`;
+
+    el.querySelectorAll('.tab-select-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(Number(btn.dataset.tabId)));
+    });
+    el.querySelectorAll('.tab-close-btn').forEach(btn => {
+        btn.addEventListener('click', e => { e.stopPropagation(); closeTab(Number(btn.dataset.closeTabId)); });
+    });
+    document.getElementById('addTabBtn').addEventListener('click', addTab);
+}
+
+function refreshAllBadges() {
+    document.querySelectorAll('#productGrid [data-barcode]').forEach(card => {
+        updateCardBadge(card.dataset.barcode);
+    });
+}
+
+function addToCart(id, name, price, barcode) {
+    const cart = getActiveCart();
+    const existing = cart.find(c => c.barcode === barcode);
+    if (existing) existing.qty += 1;
+    else cart.push({ id, barcode, name, price, qty: 1 });
+    renderCart();
+    updateCardBadge(barcode);
+    saveTabs();
+}
+
+function changeQty(barcode, delta) {
+    const tab = getActiveTab();
+    const item = tab.cart.find(c => c.barcode === barcode);
+    if (!item) return;
+    item.qty += delta;
+    if (item.qty <= 0) tab.cart = tab.cart.filter(c => c.barcode !== barcode);
+    renderCart();
+    updateCardBadge(barcode);
+    saveTabs();
+    // renderCart() replaces the DOM node for the button we just clicked
+    // (it rebuilds #cartItems via innerHTML), which drops focus to
+    // <body>. Re-focus the search box so the barcode scanner keeps
+    // working without the cashier having to click back into it.
+    refocusSearch();
+}
+
+function removeFromCart(barcode) {
+    const tab = getActiveTab();
+    tab.cart = tab.cart.filter(c => c.barcode !== barcode);
+    renderCart();
+    updateCardBadge(barcode);
+    saveTabs();
+    refocusSearch();
+}
+
+function clearOrder() {
+    const tab = getActiveTab();
+    const barcodes = tab.cart.map(c => c.barcode);
+    tab.cart = [];
+    renderCart();
+    barcodes.forEach(updateCardBadge);
+    saveTabs();
+    refocusSearch();
+}
+
+function updateCardBadge(barcode) {
+    const card = document.querySelector(`#productGrid [data-barcode="${barcode}"]`);
+    if (!card) return;
+    const badge = card.querySelector('.card-badge');
+    const item = getActiveCart().find(c => c.barcode === barcode);
+    if (!item) {
+        badge.classList.add('hidden');
+        badge.style.display = 'none';
+        badge.textContent = '';
+        return;
+    }
+    badge.textContent = item.unit === 'kg' ? item.weight.toFixed(2) + 'kg' : item.qty;
+    badge.classList.remove('hidden');
+    badge.style.display = 'flex';
+}
+
+function renderCart() {
+    renderTabs();
+
+    const cart = getActiveCart();
+    const el = document.getElementById('cartItems');
+    const clearBtn = document.getElementById('clearBtn');
+    clearBtn.classList.toggle('hidden', cart.length === 0);
+
+    if (cart.length === 0) {
+        el.innerHTML = `
+            <div class="h-full flex flex-col items-center justify-center text-center py-10 text-gray-400">
+                <p class="text-sm font-medium text-gray-500">Bu savdo hozircha bo'sh</p>
+                <p class="text-xs mt-1 max-w-[16rem]">Boshlash uchun shtrix-kodni skanerlang yoki mahsulotni tanlang.</p>
+            </div>`;
+    } else {
+        el.innerHTML = cart.map(item => {
+            const isKg = item.unit === 'kg';
+            const lineTotal = isKg ? item.price * item.weight : item.price * item.qty;
+            return `
+            <div class="flex items-center gap-3 py-3 border-b border-gray-100 last:border-0">
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold text-gray-800 truncate">${escapeHtml(item.name)}</p>
+                    <p class="text-[11px] text-gray-500 font-mono mt-0.5">${isKg ? `${item.weight.toFixed(2)} kg × ${fmt(item.price)}/kg` : `${fmt(item.price)} dona narxi`}</p>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    ${isKg
+                        ? `<button type="button" data-edit-barcode="${escapeHtml(item.barcode)}" class="qty-edit-btn qty-btn text-xs font-medium px-2 py-1 rounded border border-gray-200 text-gray-600 bg-gray-50 hover:bg-gray-100 transition">Tahrirlash</button>`
+                        : `<button type="button" onclick="changeQty('${escapeJs(item.barcode)}', -1)" class="qty-btn w-6 h-6 rounded border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition">−</button>
+                           <span class="w-5 text-center text-xs font-mono font-bold">${item.qty}</span>
+                           <button type="button" onclick="changeQty('${escapeJs(item.barcode)}', 1)" class="qty-btn w-6 h-6 rounded border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition">+</button>`}
+                </div>
+                <p class="w-[4.5rem] text-right font-mono text-sm font-bold text-gray-900 shrink-0">${fmt(lineTotal)}</p>
+                <button type="button" onclick="removeFromCart('${escapeJs(item.barcode)}')" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 shrink-0 transition text-lg leading-none">&times;</button>
+            </div>`;
+        }).join('');
+
+        // Wire up "Tahrirlash" buttons without inline JS string interpolation,
+        // so product names/barcodes with quotes or special characters can't
+        // break the generated markup.
+        el.querySelectorAll('.qty-edit-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const barcode = btn.dataset.editBarcode;
+                const item = getActiveCart().find(c => c.barcode === barcode);
+                if (!item) return;
+                openWeightModal(item.id, item.name, item.price, item.barcode);
+            });
+        });
+    }
+
+    const total = cart.reduce((s, c) => s + (c.unit === 'kg' ? c.price * c.weight : c.price * c.qty), 0);
+
+    document.getElementById('totalAmt').textContent = fmt(total);
+    document.getElementById('chargeAmt').textContent = `( ${fmt(total)} )`;
+    document.getElementById('chargeBtn').disabled = cart.length === 0;
+}
+
+// Escape helpers so values coming from product data (names, barcodes) can
+// never break out of an HTML attribute or a JS string literal we build
+// dynamically in template strings above.
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+function escapeJs(str) {
+    return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+// ---- Weight (kg) products ----
+let wmId = null, wmName = '', wmPrice = 0, wmBarcode = null;
+
+function openWeightModal(id, name, price, barcode) {
+    wmId = id; wmName = name; wmPrice = price; wmBarcode = barcode;
+
+    document.getElementById('wmName').textContent = name;
+    document.getElementById('wmMeta').textContent = `PLU ${barcode} · ${fmt(price)}/kg`;
+
+    const existing = getActiveCart().find(c => c.barcode === barcode);
+    const startWeight = existing ? existing.weight : 0;
+    document.getElementById('wmWeightInput').value = startWeight ? startWeight.toFixed(2) : '';
+    document.getElementById('wmAmountInput').value = startWeight ? (startWeight * price).toFixed(2) : '';
+
+    const modal = document.getElementById('weightModal');
+    modal.dataset.show = 'true';
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+    document.getElementById('wmAmountInput').focus();
+}
+
+function closeWeightModal() {
+    const modal = document.getElementById('weightModal');
+    modal.dataset.show = 'false';
+    modal.classList.add('opacity-0', 'pointer-events-none');
+    refocusSearch();
+}
+
+document.getElementById('wmWeightInput').addEventListener('input', e => {
+    const w = parseFloat(e.target.value);
+    document.getElementById('wmAmountInput').value = isNaN(w) ? '' : (w * wmPrice).toFixed(2);
+});
+
+document.getElementById('wmAmountInput').addEventListener('input', e => {
+    const amt = parseFloat(e.target.value);
+    document.getElementById('wmWeightInput').value = isNaN(amt) ? '' : (amt / wmPrice).toFixed(2);
+});
+
+function applyWeightPreset(kg) {
+    document.getElementById('wmWeightInput').value = kg.toFixed(2);
+    document.getElementById('wmAmountInput').value = (kg * wmPrice).toFixed(2);
+}
+
+function confirmWeight() {
+    const weight = parseFloat(document.getElementById('wmWeightInput').value);
+    const tab = getActiveTab();
+    tab.cart = tab.cart.filter(c => c.barcode !== wmBarcode);
+    if (!isNaN(weight) && weight > 0) {
+        tab.cart.push({ id: wmId, barcode: wmBarcode, name: wmName, price: wmPrice, unit: 'kg', weight });
+    }
+    const barcode = wmBarcode;
+    closeWeightModal();
+    renderCart();
+    updateCardBadge(barcode);
+    saveTabs();
+}
+
+let toastTimer;
+function showToast(text, variant) {
+    const toast = document.getElementById('toast');
+    document.getElementById('toastText').textContent = text;
+    if (variant) toast.dataset.variant = variant;
+    else delete toast.dataset.variant;
+    toast.dataset.show = 'true';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toast.dataset.show = 'false'; }, 3200);
+}
+
+const searchInput = document.getElementById('searchInput');
+const allCards = () => document.querySelectorAll('#productGrid .product-card');
+
+function filterGrid(raw) {
+    const term = raw.trim().toLowerCase();
+    // If the term looks like a product code/barcode (digits only, possibly
+    // with leading zeros), match it EXACTLY against the barcode so that
+    // e.g. "001" never matches "1001". Otherwise fall back to partial
+    // name matching (and partial barcode matching) as before.
+    const isCodeLike = /^\d+$/.test(term);
+    let visibleCount = 0;
+    allCards().forEach(card => {
+        const barcode = (card.dataset.barcode || '').toLowerCase();
+        let match;
+        if (!term) {
+            match = true;
+        } else if (isCodeLike) {
+            match = barcode === term;
+        } else {
+            match = card.dataset.name.includes(term) || barcode.includes(term);
+        }
+        card.classList.toggle('hidden', !match);
+        if (match) visibleCount++;
+    });
+    document.getElementById('noMatches').classList.toggle('hidden', visibleCount !== 0);
+}
+
+searchInput.addEventListener('input', e => filterGrid(e.target.value));
+
+// ---- Duplicate-scan guard ----
+// Barcode scanners submit via a fast keystroke burst ending in Enter. If the
+// same code is scanned twice within DUPLICATE_SCAN_WINDOW_MS (e.g. the
+// cashier double-triggers the scanner, or it double-fires on one trigger
+// pull), the second scan is ignored so the item isn't added to the cart twice.
+const DUPLICATE_SCAN_WINDOW_MS = 800;
+let lastScanCode = null;
+let lastScanTime = 0;
+
+searchInput.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const raw = searchInput.value.trim();
+    if (!raw) return;
+
+    const now = Date.now();
+    if (raw === lastScanCode && (now - lastScanTime) < DUPLICATE_SCAN_WINDOW_MS) {
+        // Same code scanned again too quickly — ignore it, but still clear
+        // the input so the scanner's next scan starts from a clean field.
+        searchInput.value = '';
+        filterGrid('');
+        return;
+    }
+    lastScanCode = raw;
+    lastScanTime = now;
+
+    let card = document.querySelector(`#productGrid [data-barcode="${raw}"]`);
+
+    if (!card && !/^\d+$/.test(raw)) {
+        // Only fall back to "single visible match" for non-numeric (name)
+        // searches. For numeric codes we require an exact barcode match.
+        const visible = [...allCards()].filter(c => !c.classList.contains('hidden'));
+        if (visible.length === 1) card = visible[0];
+    }
+
+    if (!card) {
+        searchInput.value = '';
+        filterGrid('');
+        showToast("Mahsulot topilmadi", 'error');
+        return;
+    }
+
+    card.click();
+    searchInput.value = '';
+    filterGrid('');
+});
+
+function refocusSearch() {
+    if (document.getElementById('weightModal').dataset.show === 'true') return;
+    searchInput.focus();
+}
+
+document.addEventListener('click', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.closest('button')) return;
+    setTimeout(refocusSearch, 0);
+});
+
+function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent = now.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById('todayDate').textContent = now.toLocaleDateString('uz-UZ', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+function buildCartPayload() {
+    return getActiveCart().reduce((acc, item) => {
+        acc[item.id] = {
+            barcode: item.barcode,
+            name: item.name,
+            price: item.price,
+            qty: item.unit === 'kg' ? null : item.qty,
+            weight: item.unit === 'kg' ? item.weight : null
+        };
+        return acc;
+    }, {});
+}
+
+function updateStockDisplay(productId, qty) {
+    const card = document.querySelector(`#productGrid [data-id="${productId}"]`);
+    if (!card) return;
+    const label = card.querySelector('.stock-label');
+    if (!label) return;
+
+    const isKg = label.dataset.unit === 'kg';
+    const qtyNum = Number(qty);
+    label.textContent = isKg ? `Qoldiq: ${qtyNum} kg` : `Qoldiq: ${qtyNum}`;
+    label.classList.toggle('text-red-600', qtyNum === 0);
+    label.classList.toggle('text-gray-500', qtyNum !== 0);
+}
+
+let isSubmittingSale = false;
+
+function submitSale() {
+    const tab = getActiveTab();
+    if (tab.cart.length === 0 || isSubmittingSale) return;
+
+    isSubmittingSale = true;
+    const chargeBtn = document.getElementById('chargeBtn');
+    chargeBtn.disabled = true;
+
+    fetch("{% url 'pos' %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({ items: buildCartPayload() })
+    })
+    .then(r => {
+        if (!r.ok) throw new Error('Request failed');
+        return r.json();
+    })
+    .then(data => {
+        if (data.message) {
+            showToast(data.message, 'error');
+            return;
+        }
+
+        showToast("Savdo yakunlandi - " + fmt(data.sale_total));
+
+        const barcodes = tab.cart.map(c => c.barcode);
+        finishTabAfterSale();
+        renderCart();
+        barcodes.forEach(updateCardBadge);
+        saveTabs();
+
+        if (data.updated_stock) {
+            Object.entries(data.updated_stock).forEach(([id, qty]) => updateStockDisplay(id, qty));
+        } else if (data.product_id !== undefined && data.stock !== undefined) {
+            updateStockDisplay(data.product_id, data.stock);
+        }
+
+        searchInput.value = '';
+        filterGrid('');
+        refocusSearch();
+    })
+    .catch(err => {
+        console.error(err);
+        showToast("Savdoni yuborib bo'lmadi", 'error');
+    })
+    .finally(() => {
+        isSubmittingSale = false;
+        // renderCart() already disables the button when the cart is empty (success path);
+        // this line covers the error path, where items remain in the cart.
+        chargeBtn.disabled = getActiveCart().length === 0;
+    });
+}
+
+// ---- Keyboard shortcuts (single listener — do not add a second one) ----
+// F1            — charge / submit sale
+// ArrowRight    — next tab, or create a new tab if already on the last one
+// ArrowLeft     — previous tab
+// Delete / Backspace — close current tab (ignored while typing in search)
+document.addEventListener('keydown', e => {
+    if (document.getElementById('weightModal').dataset.show === 'true') return;
+
+    if (e.key === 'F1') {
+        e.preventDefault();
+        if (!document.getElementById('chargeBtn').disabled) submitSale();
+        return;
+    }
+
+    if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const idx = tabs.findIndex(t => t.id === activeTabId);
+        if (idx < tabs.length - 1) {
+            switchTab(tabs[idx + 1].id);
+        } else {
+            addTab();
+        }
+        return;
+    }
+
+    if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const idx = tabs.findIndex(t => t.id === activeTabId);
+        if (idx > 0) switchTab(tabs[idx - 1].id);
+        return;
+    }
+
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+        // Don't hijack normal text deletion while the cashier is typing in search
+        if (document.activeElement === searchInput) return;
+        e.preventDefault();
+        closeTab(activeTabId);
+        return;
+    }
+});
+
+// init
+loadTabs();
+renderCart();
+refreshAllBadges();
+updateClock();
+setInterval(updateClock, 1000);
+searchInput.focus();
+// ---- Pin Product Function ----
+// ---- Pin Product Function ----
+function pinProduct(event, productId) {
+    // Karta bosilgandagi asosiy hodisani to'xtatish (savatga tushib ketmasligi uchun)
+    event.stopPropagation();
+    
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    // Backendga so'rov yuborish
+    fetch(`/products/${productId}/pin/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken
+        }
+    })
+    .then(r => {
+        if (!r.ok) throw new Error("Xatolik yuz berdi");
+        
+        // Muvaffaqiyatli bo'lsa, sahifani avtomatik yangilash (reload)
+        // Shunda Django mahsulotlarni boshqatdan tartiblab, qistirilganlarni tepaga chiqaradi
+        window.location.reload();
+    })
+    .catch(err => {
+        console.error(err);
+        showToast("Qistirishda xatolik yuz berdi", "error");
+        refocusSearch();
+    });
+}
+</script>
+</body>
+</html>

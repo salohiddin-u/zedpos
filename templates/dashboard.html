@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+{% load humanize %}
+{% load static %}
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karavan Market — Boshqaruv paneli</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="{% url 'manifest' %}">
+    <meta name="theme-color" content="#111827">
+
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register("{% url 'service_worker' %}");
+    }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hbar { transition: height 0.4s ease; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900 antialiased h-screen flex flex-col md:flex-row overflow-hidden">
+
+    <!-- MOBIL UCHUN TEPADAGI HEADER (GAMBURGER TUGMASI BILAN) -->
+    <div class="md:hidden bg-gray-900 text-white px-4 py-3 flex items-center justify-between shrink-0 border-b border-gray-800">
+        <div class="flex items-center gap-3">
+            <button type="button" onclick="toggleSidebar()" aria-label="Open Menu" class="p-2 text-gray-200 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+            <div>
+                <h2 class="text-base font-bold tracking-wider leading-none">KARAVAN</h2>
+                <p class="text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-0.5">Market</p>
+            </div>
+        </div>
+        <span class="text-xs font-semibold text-gray-300 bg-gray-800 px-3 py-1 rounded-full">Boshqaruv paneli</span>
+    </div>
+
+    <!-- MOBIL MENYU FONINI QORAYTIRISH (OVERLAY) -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-gray-900/60 z-40 hidden backdrop-blur-sm transition-opacity md:hidden"></div>
+
+    <!-- YON MENYU (SIDEBAR) -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white flex flex-col shrink-0 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
+        <div class="p-5 flex justify-between items-center border-b border-gray-800 md:border-b-0">
+            <div>
+                <h2 class="text-xl font-bold tracking-wider">KARAVAN</h2>
+                <p class="text-xs text-gray-400 uppercase tracking-widest">Market</p>
+            </div>
+            <button type="button" onclick="toggleSidebar()" class="md:hidden p-2 text-gray-400 hover:text-white rounded-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <nav class="flex flex-col px-4 py-4 gap-1.5 overflow-y-auto">
+            <a href="{% url 'dashboard' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white transition">Boshqaruv paneli</a>
+            <a href="{% url 'pos' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Kassa</a>
+            <a href="{% url 'products' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Mahsulotlar</a>
+            <a href="{% url 'expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Firma</a>
+            <a href="{% url 'personal_expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Xarajatlar</a>
+        </nav>
+    </aside>
+
+    <!-- ASOSIY SHABLON QISMI -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+        <!-- PAGE HEADER -->
+        <header class="bg-white border-b border-gray-200 p-4 md:p-6 shrink-0 flex items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Boshqaruv paneli</h1>
+                <p id="todayDate" class="text-sm text-gray-500 mt-0.5 capitalize"></p>
+            </div>
+            <span id="clock" class="font-mono text-sm text-gray-600 bg-gray-100 px-3 py-1.5 rounded-lg hidden sm:block border border-gray-200"></span>
+        </header>
+
+        <!-- SCROLLABLE CONTENT -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+
+            <!-- Z-REPORT (X-HISOBOT) STRIP -->
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <div class="px-5 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between flex-wrap gap-2">
+                    <p class="text-xs font-bold uppercase tracking-wider text-gray-500">Bugun · X-Hisobot</p>
+                    <p class="text-xs font-mono text-gray-400">{{localtime}} holatiga ko'ra</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-200">
+                    <div class="p-5">
+                        <p class="text-xs uppercase tracking-wider text-gray-500 font-medium">Umumiy savdo</p>
+                        <p class="font-bold text-2xl text-gray-900 mt-1">{{today_sales_total | intcomma}} so'm</p>
+                        <p class="text-xs font-medium {% if percentage_change >= 0 %}text-emerald-600{% else %}text-red-500{% endif %} mt-1">
+                            {% if percentage_change >= 0 %}▲{% else %}▼{% endif %} {{percentage_change | floatformat}}% kecha {{ localtime.time }} ga nisbatan
+                        </p>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-xs uppercase tracking-wider text-gray-500 font-medium">Foyda</p>
+                        <p class="font-bold text-2xl text-gray-900 mt-1">{{today_profit|floatformat:0}} so'm</p>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-xs uppercase tracking-wider text-gray-500 font-medium">Firma</p>
+                        <p class="font-bold text-2xl text-red-600 mt-1">{{ today_total_expenses }} so'm</p>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-xs uppercase tracking-wider text-gray-500 font-medium">Mahsulotlar sotish narxi</p>
+                        <p class="font-bold text-2xl text-gray-900 mt-1">{{ products_sale_price|floatformat:0 }} so'm</p>
+                        <p class="text-xs text-gray-400 mt-1">
+                            Tannarx: {{ products_total_vendor|floatformat:0 }} so'm
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PERIOD REPORTS -->
+            <div>
+                <p class="text-xs uppercase tracking-wider text-gray-500 font-bold mb-3 px-1">Hisobotlar</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+
+                    <!-- Kecha -->
+                    <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-sm font-bold text-gray-900">Kecha</p>
+                                <span class="text-[10px] font-mono uppercase tracking-wider text-gray-500 bg-gray-100 border border-gray-200 rounded-full px-2 py-0.5">Yopilgan</span>
+                            </div>
+                            <p class="text-xs uppercase tracking-wider text-gray-400 font-medium">Savdo</p>
+                            <p class="text-xl font-bold text-emerald-600 mt-0.5">{{ yesterday_all_sales }} so'm</p>
+                        </div>
+                        <div class="border-t border-gray-100 my-4"></div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Foyda</p>
+                                <p class="text-sm font-semibold text-gray-900 mt-0.5">{{ yesterday_profit|floatformat:0 }} so'm</p>
+                            </div>
+                            <div>
+                                <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Firma</p>
+                                <p class="text-sm font-semibold text-red-500 mt-0.5">{{ yesterday_expenses|floatformat:0 }} so'm</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 7 kun -->
+                    <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-sm font-bold text-gray-900">7 kun</p>
+                                <span class="text-[10px] font-mono uppercase tracking-wider text-gray-500 bg-gray-100 border border-gray-200 rounded-full px-2 py-0.5">Haftalik</span>
+                            </div>
+                            <p class="text-xs uppercase tracking-wider text-gray-400 font-medium">Savdo</p>
+                            <p class="text-xl font-bold text-emerald-600 mt-0.5">{{ days_7_all_sales }} so'm</p>
+                        </div>
+                        <div class="border-t border-gray-100 my-4"></div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Foyda</p>
+                                <p class="text-sm font-semibold text-gray-900 mt-0.5">{{ days_7_profit|floatformat:0 }} so'm</p>
+                            </div>
+                            <div>
+                                <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Firma</p>
+                                <p class="text-sm font-semibold text-red-500 mt-0.5">{{ days_7_expenses|floatformat:0 }} so'm</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Oylik -->
+                    <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-sm font-bold text-gray-900">Oylik</p>
+                                <div class="flex items-center justify-end gap-1">
+                                    <a href="{% url 'dashboard' %}?month={{ prev_month_param }}" class="w-6 h-6 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition" aria-label="Oldingi oy">‹</a>
+                                    <span class="text-[10px] font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5 truncate max-w-[80px] text-center">{{ month_name }}</span>
+                                    {% if next_month_param %}
+                                    <a href="{% url 'dashboard' %}?month={{ next_month_param }}" class="w-6 h-6 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition" aria-label="Keyingi oy">›</a>
+                                    {% else %}
+                                    <span class="w-6 h-6 rounded-full flex items-center justify-center text-gray-300 cursor-not-allowed">›</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <p class="text-xs uppercase tracking-wider text-gray-400 font-medium">Savdo</p>
+                            <p class="text-xl font-bold text-emerald-600 mt-0.5">{{ month_all_sales|floatformat:0 }} so'm</p>
+                        </div>
+                        <div class="border-t border-gray-100 my-4"></div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Foyda</p>
+                                <p class="text-sm font-semibold text-gray-900 mt-0.5">{{ month_profit|floatformat:0 }} so'm</p>
+                            </div>
+                            <div>
+                                <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Firma</p>
+                                <p class="text-sm font-semibold text-red-500 mt-0.5">{{ month_expenses|floatformat:0 }} so'm</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Range -->
+                    <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <form method="GET" action="{% url 'dashboard' %}" class="space-y-2 mb-3">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="text-xs p-1.5 rounded-lg border border-gray-300 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:outline-none w-full">
+                                    <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="text-xs p-1.5 rounded-lg border border-gray-300 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:outline-none w-full">
+                                </div>
+                                <button type="submit" class="w-full text-xs font-semibold py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition">Qo'llash</button>
+                            </form>
+
+                            {% if custom_range_active %}
+                            <p class="text-xs uppercase tracking-wider text-gray-400 font-medium">Savdo</p>
+                            <p class="text-xl font-bold text-emerald-600 mt-0.5">{{ custom_sales|floatformat:0 }} so'm</p>
+                            {% else %}
+                            <p class="text-xs text-gray-400 mt-2">Sana oralig'ini tanlang va "Qo'llash" tugmasini bosing.</p>
+                            {% endif %}
+                        </div>
+
+                        {% if custom_range_active %}
+                        <div>
+                            <div class="border-t border-gray-100 my-3"></div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Foyda</p>
+                                    <p class="text-sm font-semibold text-gray-900 mt-0.5">{{ custom_profit|floatformat:0 }} so'm</p>
+                                </div>
+                                <div>
+                                    <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Firma</p>
+                                    <p class="text-sm font-semibold text-red-500 mt-0.5">{{ custom_expenses|floatformat:0 }} so'm</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- SALES BY HOUR & TOP SELLERS -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- Soatlik savdo -->
+                <div class="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-5 shadow-sm relative">
+                    <div class="flex items-baseline justify-between mb-4">
+                        <p class="text-sm font-bold text-gray-900">Soatlik savdo</p>
+                        <p id="chart-peak-info" class="text-xs font-mono text-gray-400">Eng yuqori -- · 0 so'm</p>
+                    </div>
+
+                    <div id="chart-bars-container" class="flex items-end gap-1.5 h-44 relative pt-4"></div>
+
+                    <div id="chart-tooltip" class="absolute pointer-events-none opacity-0 bg-gray-900 text-white text-xs font-mono py-1 px-2.5 rounded shadow-lg transition-opacity duration-150 -translate-x-1/2 -translate-y-full z-20"></div>
+                </div>
+
+                <!-- Top Sellers -->
+                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                    <p class="text-sm font-bold text-gray-900 mb-4">Bugungi eng ko'p sotilganlar</p>
+                    <div id="top-sellers-container" class="space-y-3"></div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    // SIDEBAR TOGGLE
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
+    }
+
+    // CLOCK & DATE
+    function updateClock() {
+        const now = new Date();
+        const clockEl = document.getElementById('clock');
+        const dateEl = document.getElementById('todayDate');
+        if(clockEl) clockEl.textContent = now.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        if(dateEl) dateEl.textContent = now.toLocaleDateString('uz-UZ', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+</script>
+
+<script>
+    // HOURLY CHART SCRIPT
+    const hourlyData = [
+        {% for item in sales_by_hour %}
+        {
+            hour24: Number('{{ item.hour | safe }}'),
+            value: Number('{{ item.total | safe }}') || 0
+        },
+        {% endfor %}
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const container = document.getElementById('chart-bars-container');
+        const peakInfo = document.getElementById('chart-peak-info');
+        const tooltip = document.getElementById('chart-tooltip');
+
+        if (!container || !hourlyData || hourlyData.length === 0) return;
+
+        const format24HourLabel = (hour) => `${String(hour).padStart(2, '0')}:00`;
+
+        const formatCurrency = (num) => {
+            const formattedNumber = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(num);
+            return `${formattedNumber} so'm`;
+        };
+
+        let maxVal = 0;
+        let peakHour24 = hourlyData[0] ? hourlyData[0].hour24 : 0;
+
+        hourlyData.forEach(item => {
+            if (item.value > maxVal) {
+                maxVal = item.value;
+                peakHour24 = item.hour24;
+            }
+        });
+
+        if (maxVal > 0) {
+            peakInfo.textContent = `Eng yuqori ${format24HourLabel(peakHour24)} · ${formatCurrency(maxVal)}`;
+        } else {
+            peakInfo.textContent = `Bugun savdo ma'lumotlari yo'q`;
+        }
+
+        let htmlContent = '';
+
+        hourlyData.forEach(item => {
+            const percentageHeight = maxVal > 0 ? (item.value / maxVal) * 100 : 0;
+
+            let brandColor = 'bg-blue-300';
+            if (percentageHeight === 100) brandColor = 'bg-blue-600';
+            else if (percentageHeight > 70) brandColor = 'bg-blue-500';
+            else if (percentageHeight > 30) brandColor = 'bg-blue-400';
+
+            const axisLabel = String(item.hour24).padStart(2, '0');
+
+            htmlContent += `
+                <div class="flex-1 h-full flex flex-col items-center justify-end gap-1.5 group">
+                    <div class="hbar w-full rounded-t ${brandColor} cursor-pointer transition-all hover:opacity-80"
+                         style="height: ${Math.max(percentageHeight, 4)}%"
+                         data-value="${format24HourLabel(item.hour24)}: ${formatCurrency(item.value)}">
+                    </div>
+                    <span class="text-[10px] font-mono text-gray-400">${axisLabel}</span>
+                </div>
+            `;
+        });
+
+        container.innerHTML = htmlContent;
+
+        const bars = container.querySelectorAll('.hbar');
+        bars.forEach(bar => {
+            bar.addEventListener('mouseenter', () => {
+                tooltip.textContent = bar.getAttribute('data-value');
+                tooltip.classList.replace('opacity-0', 'opacity-100');
+            });
+
+            bar.addEventListener('mousemove', (e) => {
+                const wrapperRect = container.closest('.lg\\:col-span-2').getBoundingClientRect();
+                const x = e.clientX - wrapperRect.left;
+                const y = e.clientY - wrapperRect.top;
+
+                tooltip.style.left = `${x}px`;
+                tooltip.style.top = `${y - 12}px`;
+            });
+
+            bar.addEventListener('mouseleave', () => {
+                tooltip.classList.replace('opacity-100', 'opacity-0');
+            });
+        });
+    });
+</script>
+
+<script>
+    // TOP SELLERS SCRIPT
+    const sellersData = [
+        {% for item in top_sellers %}
+        {
+            name: '{{ item.name | safe }}',
+            total: Number('{{ item.total | safe }}') || 0
+        },
+        {% endfor %}
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const container = document.getElementById('top-sellers-container');
+        if (!container) return;
+
+        if (!sellersData || sellersData.length === 0) {
+            container.innerHTML = `<p class="text-xs text-gray-400">Bugun uchun savdo yozuvlari mavjud emas.</p>`;
+            return;
+        }
+
+        sellersData.sort((a, b) => b.total - a.total);
+
+        const formatCurrency = (num) => {
+            const formattedNumber = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(num);
+            return `${formattedNumber} so'm`;
+        };
+
+        const maxVal = sellersData[0].total;
+        let htmlContent = '';
+
+        sellersData.forEach((item, index) => {
+            const percentageWidth = maxVal > 0 ? (item.total / maxVal) * 100 : 0;
+            const rankNumber = index + 1;
+
+            htmlContent += `
+                <div class="flex items-center gap-2.5 text-xs">
+                    <span class="font-mono text-gray-400 w-4 font-semibold">${rankNumber}</span>
+                    <span class="text-gray-800 w-32 shrink-0 truncate font-medium" title="${item.name}">${item.name}</span>
+                    <div class="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
+                        <div class="h-full bg-gray-900 rounded-full transition-all duration-500" style="width: ${percentageWidth}%"></div>
+                    </div>
+                    <span class="font-mono text-gray-600 text-right whitespace-nowrap">${formatCurrency(item.total)}</span>
+                </div>
+            `;
+        });
+
+        container.innerHTML = htmlContent;
+    });
+</script>
+
+</body>
+</html>
