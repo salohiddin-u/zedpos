@@ -12,6 +12,8 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="{% url 'manifest' %}">
+    <link rel="icon" href="{% static 'icons/icon.png' %}" type="image/x-icon">
+
     <meta name="theme-color" content="#111827">
 
     <script>
@@ -72,7 +74,7 @@
             <a href="{% url 'dashboard' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Boshqaruv paneli</a>
             <a href="{% url 'pos' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Kassa</a>
             <a href="{% url 'products' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white transition">Mahsulotlar</a>
-            <a href="{% url 'expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Firma</a>
+            <a href="{% url 'supplier_payments' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Ta'minotchi</a>
             <a href="{% url 'personal_expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Xarajatlar</a>
        </nav>
     </aside>
@@ -121,11 +123,11 @@
                 </div>
                 <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
                     <p class="text-xs uppercase tracking-wider text-gray-500 font-bold">Shu hafta sotilgan</p>
-                    <p class="font-mono text-xl font-bold text-gray-900 mt-1.5">{% if product.weight_based %}{{ sold_this_week }} kg{% else %}{{ sold_this_week | floatformat }} dona{% endif %}</p>
+                    <p class="font-mono text-xl font-bold text-gray-900 mt-1.5">{% if product.weight_based %}{{ week_qty_sold }} kg{% else %}{{ week_qty_sold | floatformat }} dona{% endif %}</p>
                 </div>
                 <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm col-span-2 sm:col-span-1">
                     <p class="text-xs uppercase tracking-wider text-gray-500 font-bold">Shu haftalik foyda</p>
-                    <p class="font-mono text-xl font-bold text-gray-900 mt-1.5">{{ days_7_profit | floatformat }} so'm</p>
+                    <p class="font-mono text-xl font-bold text-gray-900 mt-1.5">{{ week_total_profit | floatformat }} so'm</p>
                 </div>
             </div>
 
@@ -136,7 +138,7 @@
                         <p class="text-xs uppercase tracking-wider text-gray-500 font-bold">Sotuv tarixi</p>
                     </div>
                     <div id="stockActivityList" class="divide-y divide-gray-100">
-                        {% for item in sale_history %}
+                        {% for item in week_sale_history %}
                         <div class="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition">
                             <div>
                                 <p class="text-sm font-medium text-gray-900">Savdo #{{item.sale.id}}</p>
@@ -203,7 +205,7 @@
 
                     <div class="flex gap-3 mt-6">
                         <button type="button" onclick="closeReceiveModal()" class="flex-1 py-2.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-sm font-medium text-gray-700 transition">Bekor qilish</button>
-                        <button type="submit" class="flex-1 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition shadow-sm">Zaxiraga qo'shish</button>
+                        <button type="submit" id="restockSubmitBtn" class="flex-1 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition shadow-sm">Zaxiraga qo'shish</button>
                     </div>
                 </div>
             </div>
@@ -304,7 +306,7 @@
     }
 
 
-
+    
 
     function openArchiveModal() {
         document.getElementById('archiveModal').classList.remove('hidden');
@@ -320,6 +322,30 @@
             closeArchiveModal();
         }
     });
+    // ---- Prevent double-submit on restock form ----
+// A fast double-click (or a slow page reload) could otherwise fire the
+// POST twice, adding the stock twice. Lock the form on first submit.
+let isSubmittingRestock = false;
+const restockForm = document.querySelector('form[action="{% url "restock" product.id %}"]');
+const restockSubmitBtn = document.getElementById('restockSubmitBtn');
+
+if (restockForm) {
+    restockForm.addEventListener('submit', e => {
+        if (isSubmittingRestock) {
+            e.preventDefault();
+            return;
+        }
+        const qty = parseFloat(document.getElementById('rmQtyInput').value);
+        if (isNaN(qty) || qty <= 0) {
+            e.preventDefault();
+            return;
+        }
+        isSubmittingRestock = true;
+        restockSubmitBtn.disabled = true;
+        restockSubmitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        restockSubmitBtn.textContent = "Yuborilmoqda...";
+    });
+}
 </script>
 
 </body>

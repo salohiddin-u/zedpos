@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+    <link rel="icon" href="{% static 'icons/icon.png' %}" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="{% url 'manifest' %}">
     <meta name="theme-color" content="#111827">
@@ -70,7 +70,7 @@
             <a href="{% url 'dashboard' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white transition">Boshqaruv paneli</a>
             <a href="{% url 'pos' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Kassa</a>
             <a href="{% url 'products' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Mahsulotlar</a>
-            <a href="{% url 'expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Firma</a>
+            <a href="{% url 'supplier_payments' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Ta'minotchi</a>
             <a href="{% url 'personal_expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Xarajatlar</a>
         </nav>
     </aside>
@@ -99,24 +99,24 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-200">
                     <div class="p-5">
                         <p class="text-xs uppercase tracking-wider text-gray-500 font-medium">Umumiy savdo</p>
-                        <p class="font-bold text-2xl text-gray-900 mt-1">{{today_sales_total | intcomma}} so'm</p>
-                        <p class="text-xs font-medium {% if percentage_change >= 0 %}text-emerald-600{% else %}text-red-500{% endif %} mt-1">
-                            {% if percentage_change >= 0 %}▲{% else %}▼{% endif %} {{percentage_change | floatformat}}% kecha {{ localtime.time }} ga nisbatan
+                        <p class="font-bold text-2xl text-gray-900 mt-1">{{today_total_sales | intcomma}} so'm</p>
+                        <p class="text-xs font-medium {% if today_sales_change_pct >= 0 %}text-emerald-600{% else %}text-red-500{% endif %} mt-1">
+                            {% if today_sales_change_pct >= 0 %}▲{% else %}▼{% endif %} {{today_sales_change_pct | floatformat}}% kecha {{ localtime.time }} ga nisbatan
                         </p>
                     </div>
                     <div class="p-5">
                         <p class="text-xs uppercase tracking-wider text-gray-500 font-medium">Foyda</p>
-                        <p class="font-bold text-2xl text-gray-900 mt-1">{{today_profit|floatformat:0}} so'm</p>
+                        <p class="font-bold text-2xl text-gray-900 mt-1">{{today_total_profit|floatformat:0}} so'm</p>
                     </div>
                     <div class="p-5">
-                        <p class="text-xs uppercase tracking-wider text-gray-500 font-medium">Firma</p>
-                        <p class="font-bold text-2xl text-red-600 mt-1">{{ today_total_expenses }} so'm</p>
+                        <p class="text-xs uppercase tracking-wider text-gray-500 font-medium">Ta'minotchi</p>
+                        <p class="font-bold text-2xl text-red-600 mt-1">{{ today_total_supplier_payments }} so'm</p>
                     </div>
                     <div class="p-5">
                         <p class="text-xs uppercase tracking-wider text-gray-500 font-medium">Mahsulotlar sotish narxi</p>
-                        <p class="font-bold text-2xl text-gray-900 mt-1">{{ products_sale_price|floatformat:0 }} so'm</p>
+                        <p class="font-bold text-2xl text-gray-900 mt-1">{{ active_products_vendor_cost|floatformat:0 }} so'm</p>
                         <p class="text-xs text-gray-400 mt-1">
-                            Tannarx: {{ products_total_vendor|floatformat:0 }} so'm
+                            Tannarx: {{ active_products_sales_value|floatformat:0 }} so'm
                         </p>
                     </div>
                 </div>
@@ -135,17 +135,17 @@
                                 <span class="text-[10px] font-mono uppercase tracking-wider text-gray-500 bg-gray-100 border border-gray-200 rounded-full px-2 py-0.5">Yopilgan</span>
                             </div>
                             <p class="text-xs uppercase tracking-wider text-gray-400 font-medium">Savdo</p>
-                            <p class="text-xl font-bold text-emerald-600 mt-0.5">{{ yesterday_all_sales }} so'm</p>
+                            <p class="text-xl font-bold text-emerald-600 mt-0.5">{{ yesterday_total_sales }} so'm</p>
                         </div>
                         <div class="border-t border-gray-100 my-4"></div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Foyda</p>
-                                <p class="text-sm font-semibold text-gray-900 mt-0.5">{{ yesterday_profit|floatformat:0 }} so'm</p>
+                                <p class="text-sm font-semibold text-gray-900 mt-0.5">{{ yesterday_total_profit|floatformat:0 }} so'm</p>
                             </div>
                             <div>
-                                <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Firma</p>
-                                <p class="text-sm font-semibold text-red-500 mt-0.5">{{ yesterday_expenses|floatformat:0 }} so'm</p>
+                                <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Ta'minotchi</p>
+                                <p class="text-sm font-semibold text-red-500 mt-0.5">{{ yesterday_total_supplier_payments|floatformat:0 }} so'm</p>
                             </div>
                         </div>
                     </div>
@@ -158,17 +158,17 @@
                                 <span class="text-[10px] font-mono uppercase tracking-wider text-gray-500 bg-gray-100 border border-gray-200 rounded-full px-2 py-0.5">Haftalik</span>
                             </div>
                             <p class="text-xs uppercase tracking-wider text-gray-400 font-medium">Savdo</p>
-                            <p class="text-xl font-bold text-emerald-600 mt-0.5">{{ days_7_all_sales }} so'm</p>
+                            <p class="text-xl font-bold text-emerald-600 mt-0.5">{{ week_total_sales }} so'm</p>
                         </div>
                         <div class="border-t border-gray-100 my-4"></div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Foyda</p>
-                                <p class="text-sm font-semibold text-gray-900 mt-0.5">{{ days_7_profit|floatformat:0 }} so'm</p>
+                                <p class="text-sm font-semibold text-gray-900 mt-0.5">{{ week_total_profit|floatformat:0 }} so'm</p>
                             </div>
                             <div>
-                                <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Firma</p>
-                                <p class="text-sm font-semibold text-red-500 mt-0.5">{{ days_7_expenses|floatformat:0 }} so'm</p>
+                                <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Ta'minotchi</p>
+                                <p class="text-sm font-semibold text-red-500 mt-0.5">{{ week_total_supplier_payments|floatformat:0 }} so'm</p>
                             </div>
                         </div>
                     </div>
@@ -189,17 +189,17 @@
                                 </div>
                             </div>
                             <p class="text-xs uppercase tracking-wider text-gray-400 font-medium">Savdo</p>
-                            <p class="text-xl font-bold text-emerald-600 mt-0.5">{{ month_all_sales|floatformat:0 }} so'm</p>
+                            <p class="text-xl font-bold text-emerald-600 mt-0.5">{{ month_total_sales|floatformat:0 }} so'm</p>
                         </div>
                         <div class="border-t border-gray-100 my-4"></div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Foyda</p>
-                                <p class="text-sm font-semibold text-gray-900 mt-0.5">{{ month_profit|floatformat:0 }} so'm</p>
+                                <p class="text-sm font-semibold text-gray-900 mt-0.5">{{ month_total_profit|floatformat:0 }} so'm</p>
                             </div>
                             <div>
-                                <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Firma</p>
-                                <p class="text-sm font-semibold text-red-500 mt-0.5">{{ month_expenses|floatformat:0 }} so'm</p>
+                                <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Ta'minotchi</p>
+                                <p class="text-sm font-semibold text-red-500 mt-0.5">{{ month_total_supplier_payments|floatformat:0 }} so'm</p>
                             </div>
                         </div>
                     </div>
@@ -217,7 +217,7 @@
 
                             {% if custom_range_active %}
                             <p class="text-xs uppercase tracking-wider text-gray-400 font-medium">Savdo</p>
-                            <p class="text-xl font-bold text-emerald-600 mt-0.5">{{ custom_sales|floatformat:0 }} so'm</p>
+                            <p class="text-xl font-bold text-emerald-600 mt-0.5">{{ custom_range_total_sales|floatformat:0 }} so'm</p>
                             {% else %}
                             <p class="text-xs text-gray-400 mt-2">Sana oralig'ini tanlang va "Qo'llash" tugmasini bosing.</p>
                             {% endif %}
@@ -229,11 +229,11 @@
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Foyda</p>
-                                    <p class="text-sm font-semibold text-gray-900 mt-0.5">{{ custom_profit|floatformat:0 }} so'm</p>
+                                    <p class="text-sm font-semibold text-gray-900 mt-0.5">{{ custom_range_total_profit|floatformat:0 }} so'm</p>
                                 </div>
                                 <div>
-                                    <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Firma</p>
-                                    <p class="text-sm font-semibold text-red-500 mt-0.5">{{ custom_expenses|floatformat:0 }} so'm</p>
+                                    <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Ta'minotchi</p>
+                                    <p class="text-sm font-semibold text-red-500 mt-0.5">{{ custom_range_total_supplier_payments|floatformat:0 }} so'm</p>
                                 </div>
                             </div>
                         </div>
@@ -293,7 +293,7 @@
 <script>
     // HOURLY CHART SCRIPT
     const hourlyData = [
-        {% for item in sales_by_hour %}
+        {% for item in today_sales_by_hour %}
         {
             hour24: Number('{{ item.hour | safe }}'),
             value: Number('{{ item.total | safe }}') || 0
@@ -382,7 +382,7 @@
 <script>
     // TOP SELLERS SCRIPT
     const sellersData = [
-        {% for item in top_sellers %}
+        {% for item in today_top_sellers %}
         {
             name: '{{ item.name | safe }}',
             total: Number('{{ item.total | safe }}') || 0

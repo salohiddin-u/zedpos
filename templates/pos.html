@@ -13,6 +13,8 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="{% url 'manifest' %}">
+    <link rel="icon" href="{% static 'icons/icon.png' %}" type="image/x-icon">
+
     <meta name="theme-color" content="#111827">
 
     <script>
@@ -98,7 +100,7 @@
             <a href="{% url 'dashboard' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Boshqaruv paneli</a>
             <a href="{% url 'pos' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white transition">Kassa</a>
             <a href="{% url 'products' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Mahsulotlar</a>
-            <a href="{% url 'expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Firma</a>
+            <a href="{% url 'supplier_payments' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Ta'minotchi</a>
             <a href="{% url 'personal_expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Xarajatlar</a>
 
         </nav>
@@ -130,13 +132,14 @@
                     <p class="text-sm font-medium">Mos mahsulot topilmadi</p>
                 </div>
 
-                {% for product in products %}
+                {% for product in active_products %}
 {% if product.weight_based %}
 <div role="button" tabindex="0"
     data-id="{{product.id}}"
     data-name="{{product.name|lower}}"
     data-display-name="{{product.name}}"
     data-price="{{product.sales_price|unlocalize|default:0}}"
+    data-qty="{{product.qty|unlocalize|default:0}}"
     data-barcode="{{product.barcode}}"
     data-weight="1"
     onclick="openWeightModal(this.dataset.id, this.dataset.displayName, parseFloat(this.dataset.price), this.dataset.barcode)"
@@ -162,6 +165,7 @@
     data-name="{{product.name|lower}}"
     data-display-name="{{product.name}}"
     data-price="{{product.sales_price|unlocalize|default:0}}"
+    data-qty="{{product.qty|unlocalize|default:0}}"
     data-barcode="{{product.barcode}}"
     onclick="addToCart(this.dataset.id, this.dataset.displayName, parseFloat(this.dataset.price), this.dataset.barcode)"
     class="product-card cursor-pointer relative text-left bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-2 hover:border-blue-500 hover:shadow-md transition">
@@ -376,9 +380,29 @@ function refreshAllBadges() {
     });
 }
 
+// ---- Stock helpers ----
+// Reads the currently known stock for a barcode from the product card's
+// data-qty attribute. Returns Infinity if unknown/unparsable so products
+// without a valid qty are never blocked by mistake.
+function getCardStock(barcode) {
+    const card = document.querySelector(`#productGrid [data-barcode="${barcode}"]`);
+    if (!card) return Infinity;
+    const stock = parseFloat(card.dataset.qty);
+    return isNaN(stock) ? Infinity : stock;
+}
+
 function addToCart(id, name, price, barcode) {
     const cart = getActiveCart();
     const existing = cart.find(c => c.barcode === barcode);
+    const wantQty = (existing ? existing.qty : 0) + 1;
+    const stock = getCardStock(barcode);
+
+    if (wantQty > stock) {
+        showToast(`${name} - yetarli emas`, 'error');
+        refocusSearch();
+        return;
+    }
+
     if (existing) existing.qty += 1;
     else cart.push({ id, barcode, name, price, qty: 1 });
     renderCart();
@@ -390,6 +414,16 @@ function changeQty(barcode, delta) {
     const tab = getActiveTab();
     const item = tab.cart.find(c => c.barcode === barcode);
     if (!item) return;
+
+    if (delta > 0) {
+        const stock = getCardStock(barcode);
+        if (item.qty + delta > stock) {
+            showToast(`${item.name} - yetarli emas`, 'error');
+            refocusSearch();
+            return;
+        }
+    }
+
     item.qty += delta;
     if (item.qty <= 0) tab.cart = tab.cart.filter(c => c.barcode !== barcode);
     renderCart();
@@ -552,6 +586,16 @@ function applyWeightPreset(kg) {
 
 function confirmWeight() {
     const weight = parseFloat(document.getElementById('wmWeightInput').value);
+
+    if (!isNaN(weight) && weight > 0) {
+        const stock = getCardStock(wmBarcode);
+        if (weight > stock) {
+            showToast(`${wmName} - yetarli emas`, 'error');
+            refocusSearch();
+            return;
+        }
+    }
+
     const tab = getActiveTab();
     tab.cart = tab.cart.filter(c => c.barcode !== wmBarcode);
     if (!isNaN(weight) && weight > 0) {
@@ -686,6 +730,10 @@ function updateStockDisplay(productId, qty) {
     const label = card.querySelector('.stock-label');
     if (!label) return;
 
+    // Keep data-qty in sync so subsequent add-to-cart stock checks use
+    // the freshly updated stock number rather than the stale page value.
+    card.dataset.qty = qty;
+
     const isKg = label.dataset.unit === 'kg';
     const qtyNum = Number(qty);
     label.textContent = isKg ? `Qoldiq: ${qtyNum} kg` : `Qoldiq: ${qtyNum}`;
@@ -818,8 +866,6 @@ function pinProduct(event, productId) {
     .then(r => {
         if (!r.ok) throw new Error("Xatolik yuz berdi");
         
-        // Muvaffaqiyatli bo'lsa, sahifani avtomatik yangilash (reload)
-        // Shunda Django mahsulotlarni boshqatdan tartiblab, qistirilganlarni tepaga chiqaradi
         window.location.reload();
     })
     .catch(err => {
