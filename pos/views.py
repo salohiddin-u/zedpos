@@ -5,6 +5,10 @@ from django.db.models import Sum, Avg, Count, F, FloatField, ExpressionWrapper
 from django.utils.timezone import localtime
 from .models import *
 
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
+
 from datetime import datetime, timedelta, time
 from dateutil.relativedelta import relativedelta
 import calendar
@@ -49,6 +53,25 @@ def get_period_totals(start, end):
         "end_date": end,
     }
 
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    next_url = request.POST.get("next") or request.GET.get("next") or ""
+    if request.method == "POST":
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            login(request, form.get_user())
+
+            if next_url:
+                return redirect(next_url)
+            return redirect('dashboard')
+    else:
+        form = AuthenticationForm(request)
+
+    return render(request, 'login.html', {'login': form, 'next': next_url})
+
+@login_required
 def dashboard(request):
     #custom_range
     custom_range_period = {
@@ -192,6 +215,7 @@ def dashboard(request):
     return render(request, "dashboard.html", context)
 
 
+@login_required
 def point_of_sale(request):
     if request.method == "POST":
         try:
@@ -267,12 +291,14 @@ def point_of_sale(request):
     return render(request, "pos.html", context)
 
 
+@login_required
 def products_list(request):
     context = {
         "products": Product.objects.all().order_by("-active")
     }
     return render(request, "products.html", context)
 
+@login_required
 def product_add(request):
     if request.method == "POST":
         name = request.POST.get("name")
@@ -286,6 +312,7 @@ def product_add(request):
         return redirect("/products/add/")
     return render(request, "product-add.html")
 
+@login_required
 def product_detail(request, product_id):
     today = localtime().now().date()
     product = Product.objects.get(id=product_id)
@@ -306,18 +333,21 @@ def product_detail(request, product_id):
     }
     return render(request, "product-detail.html", context)
 
+@login_required
 def archive_product(request, product_id):
     product = Product.objects.get(id=product_id)
     product.active = False
     product.save()
     return redirect("/products/")
 
+@login_required
 def unarchive_product(request, product_id):
     product = Product.objects.get(id=product_id)
     product.active = True
     product.save()
     return redirect(f"/products/{product_id}/detail/")
 
+@login_required
 def restock(request, product_id):
     product = Product.objects.get(id=product_id)
     now = localtime().now()
@@ -329,6 +359,7 @@ def restock(request, product_id):
     return redirect(f"/products/{product_id}/detail/")
 
 
+@login_required
 def supplier_payments(request):
     """
     Renamed from expenses(). Lists SupplierPayments, filterable/groupable by Supplier.
@@ -385,6 +416,7 @@ def supplier_payments(request):
     }
     return render(request, 'supplier_payments.html', context)
 
+@login_required
 def add_supplier_payment(request):
     if request.method == "POST":
         amount = request.POST.get("amount")
@@ -395,6 +427,7 @@ def add_supplier_payment(request):
     return redirect("/suppliers/payments/")
 
 
+@login_required
 def supplier_detail(request, supplier_id):
     now = localtime().now()
     today = now.date()
@@ -412,6 +445,7 @@ def supplier_detail(request, supplier_id):
     return render(request, "suppliers.html", context)
 
 
+@login_required
 def add_supplier(request):
     if request.method == "POST":
         name = request.POST.get("name")
@@ -419,6 +453,7 @@ def add_supplier(request):
         return redirect("/suppliers/")
 
 
+@login_required
 def personal_expenses(request):
     now = localtime().now()
     today = now.date()
@@ -439,6 +474,7 @@ def personal_expenses(request):
 
     return render(request, "personal_expenses.html", context)
 
+@login_required
 def add_personal_expense(request):
     if request.method == "POST":
         amount = request.POST.get("expense")
@@ -450,6 +486,7 @@ def add_personal_expense(request):
         return redirect("/personal/")
 
 
+@login_required
 def pin_product(request, product_id):
     product = Product.objects.get(id=product_id)
     product.pinned = not product.pinned

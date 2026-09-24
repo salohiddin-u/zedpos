@@ -23,4 +23,6 @@ urlpatterns = [
 
     path('manifest.json', pos_views.manifest, name='manifest'),
     path('sw.js', pos_views.service_worker, name='service_worker'),
+
+    path('accounts/login/', pos_views.login_view, name='login'),
 ]
