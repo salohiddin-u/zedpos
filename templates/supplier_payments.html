@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Karavan Market — Firma</title>
+    <title>Karavan Market — Ta'minotchi</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,6 +13,8 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="{% url 'manifest' %}">
+    <link rel="icon" href="{% static 'icons/icon.png' %}" type="image/x-icon">
+
     <meta name="theme-color" content="#111827">
     <!-- In your <head> -->
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
@@ -31,7 +33,7 @@
         .sort-btn[data-active="true"] .sort-arrow { opacity: 1; color: #2563eb; }
         .cat-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #6b7280; }
         .page-btn[data-active="true"] { background-color: #2563eb; color: white; border-color: #2563eb; }
-        /* Fixed-height body for both the expenses table and the category list so the
+        /* Fixed-height body for both the expenses table and the supplier list so the
            card height never changes based on how many rows are actually shown */
         .fixed-card-body { min-height: 460px; }
     </style>
@@ -53,7 +55,7 @@
                 <p class="text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-0.5">Market</p>
             </div>
         </div>
-        <span class="text-xs font-semibold text-gray-300 bg-gray-800 px-3 py-1 rounded-full">Firma</span>
+        <span class="text-xs font-semibold text-gray-300 bg-gray-800 px-3 py-1 rounded-full">Ta'minotchi</span>
     </div>
 
     <!-- MOBIL MENYU FONINI QORAYTIRISH (OVERLAY) -->
@@ -80,7 +82,7 @@
             <a href="{% url 'dashboard' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Boshqaruv paneli</a>
             <a href="{% url 'pos' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Kassa</a>
             <a href="{% url 'products' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Mahsulotlar</a>
-            <a href="{% url 'expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white transition">Firma</a>
+            <a href="{% url 'supplier_payments' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white transition">Ta'minotchi</a>
             <a href="{% url 'personal_expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Xarajatlar</a>
             
         </nav>
@@ -92,12 +94,12 @@
         <!-- PAGE HEADER -->
         <header class="bg-white border-b border-gray-200 p-4 md:p-6 shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Firma</h1>
+                <h1 class="text-2xl font-bold text-gray-900">Ta'minotchi</h1>
                 <p class="text-sm text-gray-500">{{ today }}</p>
             </div>
             <div class="flex gap-2 w-full sm:w-auto">
-                <button type="button" onclick="openModal('addCategoryModal')" class="flex-1 sm:flex-none justify-center items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition">
-                    + Kategoriya
+                <button type="button" onclick="openModal('addsupplierModal')" class="flex-1 sm:flex-none justify-center items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition">
+                    + Ta'minotchi
                 </button>
                 <button type="button" onclick="openModal('addExpenseModal')" class="flex-1 sm:flex-none justify-center items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
                     + Xarajat
@@ -105,31 +107,30 @@
             </div>
         </header>
 
-        <!-- KARTALAR VA JADVAL -->
         <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
 
-            <!-- STATISTIKA KARTALARI -->
+
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                     <p class="text-xs text-gray-500 font-medium uppercase">Bugun</p>
-                    <p class="text-xl md:text-2xl font-bold mt-1">{{ todays_expenses|intcomma }} so'm</p>
+                    <p class="text-xl md:text-2xl font-bold mt-1">{{ today_total_supplier_payments|intcomma }} so'm</p>
                 </div>
                 <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                     <p class="text-xs text-gray-500 font-medium uppercase">7 kun</p>
-                    <p class="text-xl md:text-2xl font-bold mt-1">{{ weekly_expenses|intcomma }} so'm</p>
+                    <p class="text-xl md:text-2xl font-bold mt-1">{{ week_total_supplier_payments|intcomma }} so'm</p>
                 </div>
                 <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                     <p class="text-xs text-gray-500 font-medium uppercase">Oy</p>
-                    <p class="text-xl md:text-2xl font-bold mt-1">{{ month_expenses|intcomma }} so'm</p>
+                    <p class="text-xl md:text-2xl font-bold mt-1">{{ month_total_supplier_payments|intcomma }} so'm</p>
                 </div>
                 <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <p class="text-xs text-gray-500 font-medium uppercase">{{ category_most_expenses.category__name|default:"Eng ko'p" }}</p>
-                    <p class="text-xl md:text-2xl font-bold mt-1 text-red-600">{{ category_most_expenses.total|intcomma|default:"0" }} so'm</p>
+                    <p class="text-xs text-gray-500 font-medium uppercase">{{ supplier_most_expenses.supplier__name|default:"Eng ko'p" }}</p>
+                    <p class="text-xl md:text-2xl font-bold mt-1 text-red-600">{{ supplier_most_expenses.total|intcomma|default:"0" }} so'm</p>
                 </div>
             </div>
 
-            <!-- FILTR -->
-            <form method="GET" action="{% url 'expenses' %}" class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row flex-wrap items-end gap-4">
+
+            <form method="GET" action="{% url 'supplier_payments' %}" class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row flex-wrap items-end gap-4">
                 {% csrf_token %}
                 <div class="w-full sm:w-auto flex-1 sm:flex-none">
                     <label class="block text-xs text-gray-500 mb-1">Boshlanish</label>
@@ -140,17 +141,17 @@
                     <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
                 <div class="w-full sm:w-auto flex-1">
-                    <label class="block text-xs text-gray-500 mb-1">Kategoriya</label>
-                    <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                    <label class="block text-xs text-gray-500 mb-1">Ta'minotchi</label>
+                    <select name="supplier" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
                         <option value="">Barchasi</option>
-                        {% for cat in categories %}
-                        <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                        {% for supplier in suppliers %}
+                        <option value="{{ supplier.id }}" {% if request.GET.supplier == cat.id|stringformat:"s" %}selected{% endif %}>{{ supplier.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="flex gap-2 w-full sm:w-auto">
                     <button type="submit" class="flex-1 sm:flex-none px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 transition">Filtrlash</button>
-                    <a href="{% url 'expenses' %}" class="flex-1 sm:flex-none px-4 py-2 text-center bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Tozalash</a>
+                    <a href="{% url 'supplier_payments' %}" class="flex-1 sm:flex-none px-4 py-2 text-center bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Tozalash</a>
                 </div>
             </form>
 
@@ -169,28 +170,28 @@
                                 <tr>
                                     <th class="px-4 py-3 font-medium cursor-pointer select-none sort-btn" data-sort-key="date" onclick="setSort('date')">Sana <span class="sort-arrow">▲</span></th>
                                     <th class="px-4 py-3 font-medium cursor-pointer select-none sort-btn" data-sort-key="amount" onclick="setSort('amount')">Summa <span class="sort-arrow">▲</span></th>
-                                    <th class="px-4 py-3 font-medium cursor-pointer select-none sort-btn" data-sort-key="category" onclick="setSort('category')">Kategoriya <span class="sort-arrow">▲</span></th>
+                                    <th class="px-4 py-3 font-medium cursor-pointer select-none sort-btn" data-sort-key="supplier" onclick="setSort('supplier')">Ta'minotchi <span class="sort-arrow">▲</span></th>
                                     <th class="px-4 py-3 font-medium cursor-pointer select-none sort-btn" data-sort-key="note" onclick="setSort('note')">Tavsif <span class="sort-arrow">▲</span></th>
                                 </tr>
                             </thead>
                             <tbody id="expensesBody" class="divide-y divide-gray-100">
-                                {% for expense in expenses %}
+                                {% for payment in supplier_payments %}
                                 <tr class="expense-row hover:bg-gray-50 transition"
-                                    data-date="{{ expense.created_at|date:'Y-m-d' }}"
-                                    data-amount="{{ expense.expense }}"
-                                    data-category="{{ expense.category }}"
-                                    data-note="{{ expense.note|default:'' }}">
-                                    <td class="px-4 py-3 text-gray-500 whitespace-nowrap">{{ expense.created_at|date:"d.m.Y" }}</td>
-                                    <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{{ expense.expense|intcomma }} so'm</td>
+                                    data-date="{{ payment.created_at|date:'Y-m-d' }}"
+                                    data-amount="{{ payment.amount }}"
+                                    data-supplier="{{ payment.supplier }}"
+                                    data-note="{{ payment.note|default:'' }}">
+                                    <td class="px-4 py-3 text-gray-500 whitespace-nowrap">{{ payment.created_at|date:"d.m.Y" }}</td>
+                                    <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{{ payment.amount|intcomma }} so'm</td>
                                     <td class="px-4 py-3">
                                         <span class="inline-flex items-center gap-1.5 text-gray-700">
-                                            <span class="cat-dot"></span>{{ expense.category }}
+                                            <span class="cat-dot"></span>{{ payment.supplier }}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-3 text-gray-500 truncate max-w-[150px]">{{ expense.note|default:"—" }}</td>
+                                    <td class="px-4 py-3 text-gray-500 truncate max-w-[150px]">{{ payment.note|default:"—" }}</td>
                                 </tr>
                                 {% empty %}
-                                <tr id="emptyDbRow"><td colspan="4" class="px-4 py-8 text-center text-gray-400">Firma mavjud emas</td></tr>
+                                <tr id="emptyDbRow"><td colspan="4" class="px-4 py-8 text-center text-gray-400">Ta'minotchi mavjud emas</td></tr>
                                 {% endfor %}
                                 <tr id="noResultsRow" class="hidden">
                                     <td colspan="4" class="px-4 py-8 text-center text-gray-400">Filtrga mos kelmadi</td>
@@ -215,37 +216,37 @@
                 <!-- KATEGORIYALAR -->
                 <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
                     <div class="p-4 border-b border-gray-200 flex justify-between items-center gap-4 h-[58px]">
-                        <h3 class="font-bold text-gray-900 whitespace-nowrap">Kategoriyalar</h3>
+                        <h3 class="font-bold text-gray-900 whitespace-nowrap">Ta'minotchilar</h3>
                         <div class="flex items-center gap-3">
-                            <span id="categoryResultsSummary" class="text-xs text-gray-500 font-medium"></span>
-                            <button type="button" onclick="openModal('addCategoryModal')" class="text-sm text-blue-600 hover:underline whitespace-nowrap">+ Yangi</button>
+                            <span id="supplierResultsSummary" class="text-xs text-gray-500 font-medium"></span>
+                            <button type="button" onclick="openModal('addsupplierModal')" class="text-sm text-blue-600 hover:underline whitespace-nowrap">+ Yangi</button>
                         </div>
                     </div>
                     <div class="fixed-card-body overflow-y-auto">
-                        <ul id="categoryList" class="divide-y divide-gray-100">
-                            {% for cat in expenses_by_category %}
-                            <li class="category-row px-4 py-3 flex justify-between items-center hover:bg-gray-50 cursor-pointer transition" onclick="window.location.href='{% url 'category_detail' cat.id %}'">
+                        <ul id="supplierList" class="divide-y divide-gray-100">
+                            {% for payment in supplier_payments_by_supplier %}
+                            <li class="supplier-row px-4 py-3 flex justify-between items-center hover:bg-gray-50 cursor-pointer transition" onclick="window.location.href='{% url 'supplier_detail' payment.id %}'">
                                 <span class="text-sm font-medium text-gray-700 inline-flex items-center gap-2">
-                                    <span class="cat-dot"></span>{{ cat.name }}
+                                    <span class="payment-dot"></span>{{ payment.name }}
                                 </span>
-                                <span class="text-sm font-bold text-gray-900">{{ cat.total|intcomma }}</span>
+                                <span class="text-sm font-bold text-gray-900">{{ payment.total|intcomma }}</span>
                             </li>
                             {% empty %}
                             <li class="p-4 text-center text-gray-400 text-sm">Ma'lumot yo'q</li>
                             {% endfor %}
                         </ul>
-                        <p id="categoryNoResults" class="hidden p-4 text-center text-gray-400 text-sm">Kategoriya topilmadi</p>
+                        <p id="supplierNoResults" class="hidden p-4 text-center text-gray-400 text-sm">Kategoriya topilmadi</p>
                     </div>
                     <div class="p-4 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4 sm:h-[68px]">
                         <div class="flex items-center gap-2 text-sm text-gray-500">
                             <span>Qatorlar:</span>
-                            <select id="categoryPageSizeSelect" class="bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none">
+                            <select id="supplierPageSizeSelect" class="bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none">
                                 <option value="6">6</option>
                                 <option value="10" selected>10</option>
                                 <option value="20">20</option>
                             </select>
                         </div>
-                        <div id="categoryPageButtons" class="flex items-center gap-1"></div>
+                        <div id="supplierPageButtons" class="flex items-center gap-1"></div>
                     </div>
                 </div>
 
@@ -261,7 +262,7 @@
                 <h3 class="text-lg font-bold">Xarajat qo'shish</h3>
                 <button onclick="closeModal('addExpenseModal')" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
             </div>
-            <form method="POST" action="{% url 'add_firm_expense' %}" class="p-4 space-y-4">
+            <form method="POST" action="{% url 'add_supplier_payment' %}" class="p-4 space-y-4">
                 {% csrf_token %}
                 <div>
                     <label class="block text-sm text-gray-600 mb-1">Sana</label>
@@ -271,8 +272,8 @@
                 <div>
                     <label class="block text-sm text-gray-600 mb-1">Kategoriya</label>
                     
-                    <select id="expenseCategorySelect" name="category" required class="w-full">
-                    <option value="" disabled selected>Search category...</option>
+                    <select id="expensesupplierSelect" name="supplier" required class="w-full">
+                    <option value="" disabled selected>Search supplier...</option>
                     {% for cat in categories %}
                     <option value="{{ cat.id }}">{{ cat.name }}</option>
                     {% endfor %}
@@ -296,33 +297,33 @@
     </div>
 
     <!-- PERF: removed backdrop-blur-sm -->
-    <div id="addCategoryModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50">
+    <div id="addsupplierModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden" onclick="event.stopPropagation()">
             <div class="p-4 border-b flex justify-between items-center">
                 <h3 class="text-lg font-bold">Kategoriya qo'shish</h3>
-                <button onclick="closeModal('addCategoryModal')" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+                <button onclick="closeModal('addsupplierModal')" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
             </div>
-            <form method="POST" action="{% url 'add_category' %}" class="p-4 space-y-4">
+            <form method="POST" action="{% url 'add_supplier' %}" class="p-4 space-y-4">
                 {% csrf_token %}
                 <div>
                     <label class="block text-sm text-gray-600 mb-1">Kategoriya nomi</label>
-                    <input id="categoryName" type="text" name="name" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input id="supplierName" type="text" name="name" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div class="pt-4 flex justify-end gap-2">
-                    <button type="button" onclick="closeModal('addCategoryModal')" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm">Bekor qilish</button>
+                    <button type="button" onclick="closeModal('addsupplierModal')" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm">Bekor qilish</button>
                     <button type="submit" class="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium">Saqlash</button>
                 </div>
             </form>
         </div>
     </div>
 <script>
-  new TomSelect("#expenseCategorySelect", {
+  new TomSelect("#expensesupplierSelect", {
     create: false,
     sortField: {
       field: "text",
       direction: "asc"
     },
-    placeholder: "Search or select category..."
+    placeholder: "Search or select supplier..."
   });
 </script>
 <script>
@@ -345,7 +346,7 @@
 }
 
     guardAgainstDoubleSubmit(document.querySelector('#addExpenseModal form'));
-    guardAgainstDoubleSubmit(document.querySelector('#addCategoryModal form'));
+    guardAgainstDoubleSubmit(document.querySelector('#addsupplierModal form'));
     // Modal
     // Updated openModal function
     function openModal(id) {
@@ -354,10 +355,10 @@
         
         modal.classList.remove('hidden');
 
-        // If opening the category modal, focus and select the input after it becomes visible
-        if (id === 'addCategoryModal') {
+        // If opening the supplier modal, focus and select the input after it becomes visible
+        if (id === 'addsupplierModal') {
             setTimeout(() => {
-                const inputElement = document.getElementById('categoryName');
+                const inputElement = document.getElementById('supplierName');
                 if (inputElement) {
                     inputElement.focus();
                     inputElement.select();
@@ -377,7 +378,7 @@
     const pageSizeSelect = document.getElementById('pageSizeSelect');
     const pageButtons = document.getElementById('pageButtons');
 
-    const columnType = { date: 'string', amount: 'number', category: 'string', note: 'string' };
+    const columnType = { date: 'string', amount: 'number', supplier: 'string', note: 'string' };
     let sortKey = 'date', sortDir = -1, search = '', page = 1, pageSize = 10;
 
     function setSort(key) {
@@ -405,7 +406,7 @@
         });
 
         const filtered = sorted.filter(row =>
-            !search || (row.dataset.note + row.dataset.category).toLowerCase().includes(search)
+            !search || (row.dataset.note + row.dataset.supplier).toLowerCase().includes(search)
         );
         noResultsRow.classList.toggle('hidden', filtered.length !== 0);
 
@@ -422,9 +423,9 @@
 
         renderPagination(totalPages);
     }
-    function filterCategoryDropdown() {
-        const query = document.getElementById('categorySearchInput').value.toLowerCase();
-        const select = document.getElementById('expenseCategorySelect');
+    function filtersupplierDropdown() {
+        const query = document.getElementById('supplierSearchInput').value.toLowerCase();
+        const select = document.getElementById('expensesupplierSelect');
         const options = select.options;
 
         for (let i = 0; i < options.length; i++) {
@@ -479,36 +480,36 @@
     render();
 
     // Kategoriyalar ro'yxati uchun paginatsiya
-    const categoryRows = Array.from(document.querySelectorAll('.category-row'));
-    const categoryNoResults = document.getElementById('categoryNoResults');
-    const categoryResultsSummary = document.getElementById('categoryResultsSummary');
-    const categoryPageButtons = document.getElementById('categoryPageButtons');
-    const categoryPageSizeSelect = document.getElementById('categoryPageSizeSelect');
-    let categoryPageSize = categoryPageSizeSelect ? +categoryPageSizeSelect.value : 6;
-    let categoryPage = 1;
+    const supplierRows = Array.from(document.querySelectorAll('.supplier-row'));
+    const supplierNoResults = document.getElementById('supplierNoResults');
+    const supplierResultsSummary = document.getElementById('supplierResultsSummary');
+    const supplierPageButtons = document.getElementById('supplierPageButtons');
+    const supplierPageSizeSelect = document.getElementById('supplierPageSizeSelect');
+    let supplierPageSize = supplierPageSizeSelect ? +supplierPageSizeSelect.value : 6;
+    let supplierPage = 1;
 
-    function renderCategoryPage() {
-        if (!categoryRows.length) {
-            categoryResultsSummary.textContent = '';
-            categoryPageButtons.innerHTML = '';
+    function rendersupplierPage() {
+        if (!supplierRows.length) {
+            supplierResultsSummary.textContent = '';
+            supplierPageButtons.innerHTML = '';
             return;
         }
 
-        const totalPages = Math.max(1, Math.ceil(categoryRows.length / categoryPageSize));
-        categoryPage = Math.min(Math.max(categoryPage, 1), totalPages);
-        const start = (categoryPage - 1) * categoryPageSize;
-        const end = start + categoryPageSize;
+        const totalPages = Math.max(1, Math.ceil(supplierRows.length / supplierPageSize));
+        supplierPage = Math.min(Math.max(supplierPage, 1), totalPages);
+        const start = (supplierPage - 1) * supplierPageSize;
+        const end = start + supplierPageSize;
 
-        categoryRows.forEach((row, i) => row.classList.toggle('hidden', !(i >= start && i < end)));
-        categoryNoResults.classList.add('hidden');
+        supplierRows.forEach((row, i) => row.classList.toggle('hidden', !(i >= start && i < end)));
+        supplierNoResults.classList.add('hidden');
 
-        categoryResultsSummary.textContent = `${start + 1}–${Math.min(end, categoryRows.length)} / ${categoryRows.length}`;
+        supplierResultsSummary.textContent = `${start + 1}–${Math.min(end, supplierRows.length)} / ${supplierRows.length}`;
 
-        renderCategoryPagination(totalPages);
+        rendersupplierPagination(totalPages);
     }
 
-    function renderCategoryPagination(totalPages) {
-        categoryPageButtons.innerHTML = '';
+    function rendersupplierPagination(totalPages) {
+        supplierPageButtons.innerHTML = '';
         if (totalPages <= 1) return;
 
         const btn = (label, target, opts = {}) => {
@@ -518,26 +519,26 @@
 
             b.className = 'page-btn w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition';
 
-            b.onclick = () => { categoryPage = target; renderCategoryPage(); };
-            categoryPageButtons.appendChild(b);
+            b.onclick = () => { supplierPage = target; rendersupplierPage(); };
+            supplierPageButtons.appendChild(b);
         };
 
-        btn('‹', categoryPage - 1, { disabled: categoryPage === 1 });
+        btn('‹', supplierPage - 1, { disabled: supplierPage === 1 });
         for (let p = 1; p <= totalPages; p++) {
-            if (p === 1 || p === totalPages || Math.abs(p - categoryPage) <= 1) {
-                btn(String(p), p, { active: p === categoryPage });
-            } else if (Math.abs(p - categoryPage) === 2) {
+            if (p === 1 || p === totalPages || Math.abs(p - supplierPage) <= 1) {
+                btn(String(p), p, { active: p === supplierPage });
+            } else if (Math.abs(p - supplierPage) === 2) {
                 const s = document.createElement('span');
                 s.textContent = '…';
                 s.className = 'px-1 text-gray-400';
-                categoryPageButtons.appendChild(s);
+                supplierPageButtons.appendChild(s);
             }
         }
-        btn('›', categoryPage + 1, { disabled: categoryPage === totalPages });
+        btn('›', supplierPage + 1, { disabled: supplierPage === totalPages });
     }
 
-    renderCategoryPage();
-    categoryPageSizeSelect?.addEventListener('change', e => { categoryPageSize = +e.target.value; categoryPage = 1; renderCategoryPage(); });
+    rendersupplierPage();
+    supplierPageSizeSelect?.addEventListener('change', e => { supplierPageSize = +e.target.value; supplierPage = 1; rendersupplierPage(); });
 </script>
 
 </body>
