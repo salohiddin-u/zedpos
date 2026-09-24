@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karavan Market — Kirish</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{% static 'icons/icon.png' %}" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="{% url 'manifest' %}">
+    <meta name="theme-color" content="#111827">
+
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register("{% url 'service_worker' %}");
+    }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900 antialiased min-h-screen flex flex-col md:flex-row">
+
+    <main class="flex-1 flex items-center justify-center p-4 md:p-8">
+        <div class="w-full max-w-sm">
+
+            <div class="mb-6">
+                <h1 class="text-2xl font-bold text-gray-900">Kirish</h1>
+                <p class="text-sm text-gray-500 mt-1">Davom etish uchun hisobingizga kiring.</p>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 md:p-6">
+
+                {% if form.errors or error %}
+                <div class="mb-4 px-3 py-2.5 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600" role="alert">
+                    {% if error %}{{ error }}{% else %}Login yoki parol noto'g'ri. Qaytadan urinib ko'ring.{% endif %}
+                </div>
+                {% endif %}
+
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="mb-4 px-3 py-2.5 rounded-lg text-sm border {% if message.tags == 'error' %}bg-red-50 border-red-200 text-red-600{% else %}bg-blue-50 border-blue-200 text-blue-700{% endif %}" role="alert">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form id="loginForm" method="POST" action="{% url 'login' %}" class="space-y-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next|default:request.GET.next }}">
+
+                    <div>
+                        <label for="username" class="block text-sm text-gray-600 mb-1">Login</label>
+                        <input id="username" type="text" name="username" required autofocus autocomplete="username"
+                               value="{{ request.POST.username }}"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm text-gray-600 mb-1">Parol</label>
+                        <div class="relative">
+                            <input id="password" type="password" name="password" required autocomplete="current-password"
+                                   class="w-full pl-3 pr-16 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <button type="button" id="togglePassword" aria-label="Parolni ko'rsatish"
+                                    class="absolute inset-y-0 right-0 px-3 text-xs font-medium text-gray-500 hover:text-gray-900 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                Ko'rsatish
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed">
+                        Kirish
+                    </button>
+                </form>
+            </div>
+
+            <p class="text-xs text-gray-400 text-center mt-6">Karavan Market &copy; {% now 'Y' %}</p>
+        </div>
+    </main>
+
+<script>
+    const pwInput = document.getElementById('password');
+    const pwToggle = document.getElementById('togglePassword');
+    pwToggle.addEventListener('click', () => {
+        const show = pwInput.type === 'password';
+        pwInput.type = show ? 'text' : 'password';
+        pwToggle.textContent = show ? 'Yashirish' : "Ko'rsatish";
+        pwToggle.setAttribute('aria-label', show ? 'Parolni yashirish' : "Parolni ko'rsatish");
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', () => {
+        const btn = document.querySelector('#loginForm button[type="submit"]');
+        btn.disabled = true;
+        btn.textContent = 'Kirilmoqda...';
+    });
+</script>
+
+</body>
+</html>
