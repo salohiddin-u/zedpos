@@ -33,32 +33,42 @@ class SaleItem(models.Model):
     def __str__(self):
         return self.product.name
 
-class ExpenseCategory(models.Model):
+class Supplier(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
         return self.name
 
     class Meta:
-        verbose_name_plural = "FirmExpense Categories"
-        verbose_name = "FirmExpense Category"
+        verbose_name_plural = "Suppliers"
+        verbose_name = "Supplier"
 
-class FirmExpense(models.Model):
-    expense = models.IntegerField()
-    category = models.ForeignKey(ExpenseCategory, on_delete=models.CASCADE)
+class SupplierPayment(models.Model):
+    amount = models.IntegerField()
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     created_at = models.DateTimeField()
     note = models.CharField(max_length=200, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.expense}"
+        return f"{self.amount}"
+
+class PersonalExpenseCategory(models.Model):
+    label = models.CharField(max_length=150)
+
+    def __str__(self):
+        return f"{self.label}"
+    class Meta:
+            verbose_name_plural = "Personal expense categories"
+            verbose_name = "Personal expense category"
 
 class PersonalExpense(models.Model):
-    expense = models.IntegerField()
+    category = models.ForeignKey(PersonalExpenseCategory, on_delete=models.CASCADE, null=True)
+    amount = models.IntegerField()
     created_at = models.DateTimeField()
     note = models.CharField(max_length=200)
 
     def __str__(self):
-        return f"{self.expense} - {self.note}"
+        return f"{self.amount} - {self.category}"
 
 class Stock(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
