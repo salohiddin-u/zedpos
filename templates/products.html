@@ -8,13 +8,13 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="{% url 'manifest' %}">
     <link rel="icon" href="{% static 'icons/icon.png' %}" type="image/x-icon">
 
-    <meta name="theme-color" content="#111827">
+    <meta name="theme-color" content="#211A14">
 
     <script>
     if ('serviceWorker' in navigator) {
@@ -22,63 +22,136 @@
     }
     </script>
 
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Manrope', 'sans-serif'] },
+                    colors: {
+                        /* Karavan — desert / caravan palette. Warm sand, deep tent-charcoal,
+                           copper as the single accent, sage + rust used sparingly for signal. */
+                        dune:    { 50: '#FAF7F1', 100: '#F3ECDF', 200: '#E6D9C1', 300: '#D3BE97' },
+                        tent:    { 900: '#1E1812', 800: '#241D16', 700: '#2E251C' },
+                        ink:     { 900: '#241C14', 700: '#4A4034', 500: '#8A7D6C', 400: '#A69A87' },
+                        copper:  { 400: '#DE9A56', 500: '#C1692F', 600: '#A6551F', 700: '#8A4419' },
+                        sage:    { 500: '#6E8F6C', 50: '#EEF3ED' },
+                        rust:    { 500: '#B85C45', 50: '#FBEFEA' },
+                    },
+                    boxShadow: {
+                        card: '0 1px 2px rgba(36, 28, 20, 0.04), 0 8px 24px -8px rgba(36, 28, 20, 0.08)',
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        
+        body { font-family: 'Manrope', sans-serif; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #D3BE97; border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #C1692F; }
+
+        .nav-active { position: relative; }
+        .nav-active::before {
+            content: '';
+            position: absolute;
+            left: -16px; top: 6px; bottom: 6px;
+            width: 3px;
+            border-radius: 999px;
+            background: #DE9A56;
+        }
+
         .sort-btn { display: inline-flex; align-items: center; gap: 0.25rem; cursor: pointer; user-select: none; }
-        .sort-btn:hover { color: #111827; }
+        .sort-btn:hover { color: #241C14; }
         .sort-arrow { font-size: 0.65rem; opacity: 0.3; }
-        .sort-btn[data-active="true"] .sort-arrow { opacity: 1; color: #2563EB; }
+        .sort-btn[data-active="true"] .sort-arrow { opacity: 1; color: #C1692F; }
 
         .page-btn[data-active="true"] {
-            background-color: #2563EB;
+            background-color: #C1692F;
             color: #FFFFFF;
-            border-color: #2563EB;
+            border-color: #C1692F;
         }
     </style>
 </head>
 
-<body class="bg-gray-50 text-gray-900 antialiased h-screen flex flex-col md:flex-row overflow-hidden">
+<body class="bg-dune-50 text-ink-900 antialiased h-screen flex flex-col md:flex-row overflow-hidden">
 
     <!-- MOBIL UCHUN TOP-BAR (HAMBURGER MENYU) -->
-    <div class="md:hidden bg-gray-900 text-white px-4 py-3 flex items-center justify-between shrink-0 border-b border-gray-800">
+    <div class="md:hidden bg-tent-900 text-dune-50 px-4 py-3 flex items-center justify-between shrink-0 border-b border-white/10">
         <div class="flex items-center gap-3">
-            <button type="button" onclick="toggleSidebar()" aria-label="Open Menu" class="p-2 text-gray-200 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <button type="button" onclick="toggleSidebar()" aria-label="Open Menu" class="p-2 text-dune-200 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-copper-400 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
             </button>
-            <div>
-                <h2 class="text-base font-bold tracking-wider leading-none">KARAVAN</h2>
-                <p class="text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-0.5">Market</p>
+            <div class="flex items-center gap-2">
+                <img src="{% static 'icons/icon.png' %}" alt="" class="w-7 h-7 rounded-md">
+                <div>
+                    <h2 class="text-sm font-bold tracking-tight leading-none">Karavan</h2>
+                    <p class="text-[10px] text-copper-400 leading-none mt-1">Market</p>
+                </div>
             </div>
         </div>
-        <span class="text-xs font-semibold text-gray-300 bg-gray-800 px-3 py-1 rounded-full">Mahsulotlar</span>
+        <span class="text-[11px] font-medium text-dune-200 bg-white/5 px-3 py-1 rounded-full border border-white/10">Mahsulotlar</span>
     </div>
 
-    <!-- MOBIL MENYU FONINI QORAYTIRISH (OVERLAY) -->
-    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-gray-900/60 z-40 hidden backdrop-blur-sm transition-opacity md:hidden"></div>
+    <!-- MOBIL MENYU FONI -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-tent-900/70 z-40 hidden backdrop-blur-sm transition-opacity md:hidden"></div>
 
     <!-- YON MENYU (SIDEBAR) -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white flex flex-col shrink-0 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
-        <div class="p-5 flex justify-between items-center border-b border-gray-800 md:border-b-0">
-            <div>
-                <h2 class="text-xl font-bold tracking-wider">KARAVAN</h2>
-                <p class="text-xs text-gray-400 uppercase tracking-widest">Market</p>
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-tent-900 text-dune-100 flex flex-col shrink-0 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
+        <div class="p-5 flex justify-between items-center border-b border-white/[0.06] md:border-b-0">
+            <div class="flex items-center gap-2.5">
+                <img src="{% static 'icons/icon.png' %}" alt="Karavan" class="w-9 h-9 rounded-lg shadow-card">
+                <div>
+                    <h2 class="text-lg font-bold tracking-tight leading-none text-white">Karavan</h2>
+                    <p class="text-[10px] text-copper-400 font-medium tracking-[0.2em] leading-none mt-1.5">MARKET</p>
+                </div>
             </div>
-            <button type="button" onclick="toggleSidebar()" class="md:hidden p-2 text-gray-400 hover:text-white rounded-lg">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <button type="button" onclick="toggleSidebar()" class="md:hidden p-2 text-dune-300 hover:text-white rounded-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
             </button>
         </div>
-        
-        <nav class="flex flex-col px-4 py-4 gap-1.5 overflow-y-auto">
-            <a href="{% url 'dashboard' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Boshqaruv paneli</a>
-            <a href="{% url 'pos' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Kassa</a>
-            <a href="{% url 'products' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white transition">Mahsulotlar</a>
-            <a href="{% url 'supplier_payments' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Ta'minotchi</a>
-            <a href="{% url 'personal_expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Xarajatlar</a>
+
+        <nav class="flex flex-col px-4 md:px-6 py-4 gap-0.5 overflow-y-auto mt-1">
+            <p class="px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-dune-300/50 mb-2 mt-1">Boshqarish</p>
+
+            <a href="{% url 'dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                Boshqaruv paneli
+            </a>
+            <a href="{% url 'pos' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M5 6h14a1 1 0 011 1v11a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1zm3 8h4"></path>
+                </svg>
+                Kassa
+            </a>
+            <a href="{% url 'products' %}" class="nav-active flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold bg-white/[0.06] text-white transition">
+                <svg class="w-[18px] h-[18px] shrink-0 text-copper-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+                Mahsulotlar
+            </a>
+            <a href="{% url 'supplier_payments' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5V9a1 1 0 011-1h9l4 4v4.5a1 1 0 01-1 1H4a1 1 0 01-1-1z"></path>
+                    <circle cx="7.5" cy="17.5" r="1.5" stroke-width="1.8"></circle>
+                    <circle cx="16.5" cy="17.5" r="1.5" stroke-width="1.8"></circle>
+                </svg>
+                Ta'minotchi
+            </a>
+            <a href="{% url 'personal_expenses' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 3h9l3 3v15a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1zm9 0v3h3M8 12h8M8 16h5"></path>
+                </svg>
+                Xarajatlar
+            </a>
         </nav>
     </aside>
 
@@ -92,9 +165,9 @@
             <div class="flex flex-col gap-4 ">
                 <div class="flex items-center justify-between gap-4 flex-wrap">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900 leading-tight">Mahsulotlar</h1>
+                        <h1 class="text-2xl font-bold text-ink-900 leading-tight tracking-tight">Mahsulotlar</h1>
                     </div>
-                    <a href="{% url 'product_add' %}" class="px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition shadow-sm">
+                    <a href="{% url 'product_add' %}" class="px-4 py-2.5 rounded-lg bg-copper-500 hover:bg-copper-600 text-white text-sm font-semibold transition shadow-card">
                         + Mahsulot qo'shish
                     </a>
                 </div>
@@ -102,55 +175,55 @@
                 <!-- SEARCH INPUT & RESULTS SUMMARY -->
                 <div class="flex items-center justify-between gap-3 flex-wrap">
                     <input id="searchInput" type="text" placeholder="Nomi yoki shtrix-kod bo'yicha qidiring…"
-                        class="w-full sm:max-w-xs px-3.5 py-2 border border-gray-300 rounded-lg text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none transition" autofocus>
-                    <p id="resultsSummary" class="text-xs text-gray-500 font-mono"></p>
+                        class="w-full sm:max-w-xs px-3.5 py-2 border border-dune-200 bg-white rounded-lg text-sm text-ink-900 placeholder:text-ink-400 focus:ring-2 focus:ring-copper-400 focus:border-copper-400 focus:outline-none transition" autofocus>
+                    <p id="resultsSummary" class="text-xs text-ink-500 font-mono"></p>
                 </div>
             </div>
 
             <!-- TABLE CONTAINER -->
-            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex-1 flex flex-col">
+            <div class="bg-white border border-dune-200 rounded-2xl shadow-card overflow-hidden flex-1 flex flex-col">
                 <div class="overflow-x-auto flex-1">
                     <table class="w-full text-sm text-left">
-                        <thead class="bg-gray-50 border-b border-gray-200">
+                        <thead class="bg-dune-100/50 border-b border-dune-200">
                             <tr>
-                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-ink-500 font-semibold">
                                     <span class="sort-btn" data-sort-key="name" onclick="setSort('name')">Mahsulot <span class="sort-arrow">▲</span></span>
                                 </th>
-                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-ink-500 font-semibold">
                                     <span class="sort-btn" data-sort-key="barcode" onclick="setSort('barcode')">Shtrix-kod / PLU <span class="sort-arrow">▲</span></span>
                                 </th>
-                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-ink-500 font-semibold">
                                     <span class="sort-btn" data-sort-key="price" onclick="setSort('price')">Narx <span class="sort-arrow">▲</span></span>
                                 </th>
-                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-ink-500 font-semibold">
                                     <span class="sort-btn" data-sort-key="qty" onclick="setSort('qty')">Zaxira <span class="sort-arrow">▲</span></span>
                                 </th>
-                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-ink-500 font-semibold">
                                     <span class="sort-btn" data-sort-key="status" onclick="setSort('status')">Holat <span class="sort-arrow">▲</span></span>
                                 </th>
                             </tr>
                         </thead>
-                        <tbody id="productsBody" class="divide-y divide-gray-200 bg-white">
+                        <tbody id="productsBody" class="divide-y divide-dune-100 bg-white">
                             {% for product in products %}
-                            <tr onclick="window.location.href='{% url 'product_detail' product.id %}'" class="product-row hover:bg-gray-50/80 transition cursor-pointer"
+                            <tr onclick="window.location.href='{% url 'product_detail' product.id %}'" class="product-row hover:bg-dune-50/80 transition cursor-pointer"
                                 data-name="{{ product.name }}"
                                 data-barcode="{{ product.barcode }}"
                                 data-price="{{ product.sales_price }}"
                                 data-qty="{{ product.qty }}"
                                 data-status="{% if product.active %}Active{% else %}Archived{% endif %}">
-                                <td class="px-6 py-3.5 font-medium text-gray-900 hover:text-blue-600 transition">{{ product.name }}</td>
-                                <td class="px-6 py-3.5 font-mono text-gray-500">{{ product.barcode }}</td>
-                                <td class="px-6 py-3.5 font-mono text-gray-900">{{ product.sales_price }} so'm</td>
-                                <td class="px-6 py-3.5 font-mono {% if product.qty == 0 %}text-red-600 font-medium{% else %}text-gray-900{% endif %}">
+                                <td class="px-6 py-3.5 font-medium text-ink-900 hover:text-copper-600 transition">{{ product.name }}</td>
+                                <td class="px-6 py-3.5 font-mono text-ink-500">{{ product.barcode }}</td>
+                                <td class="px-6 py-3.5 font-mono text-ink-900">{{ product.sales_price }} so'm</td>
+                                <td class="px-6 py-3.5 font-mono {% if product.qty == 0 %}text-rust-500 font-semibold{% else %}text-ink-900{% endif %}">
                                     {% if product.weight_based %}{{ product.qty }} kg{% else %}{{ product.qty | floatformat }} dona{% endif %}
                                 </td>
                                 <td class="px-6 py-3.5">
                                     {% if product.active %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-sage-50 text-sage-500">
                                         Faol
                                     </span>
                                     {% else %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-dune-100 text-ink-500">
                                         Arxivlangan
                                     </span>
                                     {% endif %}
@@ -159,17 +232,17 @@
                             {% endfor %}
 
                             <tr id="noResultsRow" class="hidden">
-                                <td colspan="5" class="px-6 py-10 text-center text-sm text-gray-500">Qidiruvingizga mos mahsulot topilmadi.</td>
+                                <td colspan="5" class="px-6 py-10 text-center text-sm text-ink-500">Qidiruvingizga mos mahsulot topilmadi.</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
                 <!-- PAGINATION BAR -->
-                <div id="paginationBar" class="px-6 py-3.5 bg-gray-50 border-t border-gray-200 flex items-center justify-between gap-3 flex-wrap">
-                    <div class="flex items-center gap-2 text-xs text-gray-500">
+                <div id="paginationBar" class="px-6 py-3.5 bg-dune-100/50 border-t border-dune-200 flex items-center justify-between gap-3 flex-wrap">
+                    <div class="flex items-center gap-2 text-xs text-ink-500">
                         <span>Sahifadagi qatorlar</span>
-                        <select id="pageSizeSelect" class="font-mono text-xs bg-white border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <select id="pageSizeSelect" class="font-mono text-xs bg-white border border-dune-200 rounded-md px-2 py-1 text-ink-900 focus:ring-2 focus:ring-copper-400 focus:outline-none">
                             <option value="20">20</option>
                             <option value="25">25</option>
                             <option value="50">50</option>
@@ -291,7 +364,7 @@
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.textContent = label;
-            btn.className = 'page-btn text-xs font-mono px-2.5 py-1.5 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition disabled:opacity-40 disabled:pointer-events-none';
+            btn.className = 'page-btn text-xs font-mono px-2.5 py-1.5 rounded-md border border-dune-200 bg-white text-ink-700 hover:bg-dune-50 transition disabled:opacity-40 disabled:pointer-events-none';
             btn.disabled = !!opts.disabled;
             if (opts.active) btn.dataset.active = 'true';
             btn.onclick = () => { currentPage = page; render(); };
@@ -306,7 +379,7 @@
             } else if (Math.abs(p - currentPage) === 2) {
                 const span = document.createElement('span');
                 span.textContent = '…';
-                span.className = 'text-xs text-gray-400 px-1';
+                span.className = 'text-xs text-ink-400 px-1';
                 pageButtons.appendChild(span);
             }
         }

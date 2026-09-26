@@ -9,13 +9,13 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="{% url 'manifest' %}">
     <link rel="icon" href="{% static 'icons/icon.png' %}" type="image/x-icon">
 
-    <meta name="theme-color" content="#111827">
+    <meta name="theme-color" content="#211A14">
     <!-- In your <head> -->
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
 
@@ -27,81 +27,162 @@
     }
     </script>
 
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Manrope', 'sans-serif'] },
+                    colors: {
+                        /* Karavan — desert / caravan palette. Warm sand, deep tent-charcoal,
+                           copper as the single accent, sage + rust used sparingly for signal. */
+                        dune:    { 50: '#FAF7F1', 100: '#F3ECDF', 200: '#E6D9C1', 300: '#D3BE97' },
+                        tent:    { 900: '#1E1812', 800: '#241D16', 700: '#2E251C' },
+                        ink:     { 900: '#241C14', 700: '#4A4034', 500: '#8A7D6C', 400: '#A69A87' },
+                        copper:  { 400: '#DE9A56', 500: '#C1692F', 600: '#A6551F', 700: '#8A4419' },
+                        sage:    { 500: '#6E8F6C', 50: '#EEF3ED' },
+                        rust:    { 500: '#B85C45', 50: '#FBEFEA' },
+                    },
+                    boxShadow: {
+                        card: '0 1px 2px rgba(36, 28, 20, 0.04), 0 8px 24px -8px rgba(36, 28, 20, 0.08)',
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Manrope', sans-serif; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #D3BE97; border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #C1692F; }
+
+        .nav-active { position: relative; }
+        .nav-active::before {
+            content: '';
+            position: absolute;
+            left: -16px; top: 6px; bottom: 6px;
+            width: 3px;
+            border-radius: 999px;
+            background: #DE9A56;
+        }
+
         .sort-arrow { opacity: 0.3; font-size: 0.75rem; margin-left: 2px; }
-        .sort-btn[data-active="true"] .sort-arrow { opacity: 1; color: #2563eb; }
-        .cat-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #6b7280; }
-        .page-btn[data-active="true"] { background-color: #2563eb; color: white; border-color: #2563eb; }
+        .sort-btn[data-active="true"] .sort-arrow { opacity: 1; color: #C1692F; }
+        .cat-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #DE9A56; }
+        .payment-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #DE9A56; }
+        .page-btn[data-active="true"] { background-color: #C1692F; color: white; border-color: #C1692F; }
         /* Fixed-height body for both the expenses table and the supplier list so the
            card height never changes based on how many rows are actually shown */
         .fixed-card-body { min-height: 460px; }
+
+        /* Tom Select — match the Karavan palette */
+        .ts-wrapper.single .ts-control, .ts-control { border-color: #E6D9C1 !important; background: #FAF7F1 !important; border-radius: 0.5rem !important; }
+        .ts-wrapper.focus .ts-control { border-color: #DE9A56 !important; box-shadow: 0 0 0 2px #DE9A5666 !important; }
+        .ts-dropdown { border-color: #E6D9C1 !important; font-family: 'Manrope', sans-serif; }
+        .ts-dropdown .active { background-color: #F3ECDF !important; color: #241C14 !important; }
     </style>
 </head>
 
-<body class="bg-gray-50 text-gray-900 antialiased h-screen flex flex-col md:flex-row overflow-hidden">
+<body class="bg-dune-50 text-ink-900 antialiased h-screen flex flex-col md:flex-row overflow-hidden">
 
     <!-- MOBIL UCHUN FAQAT GAMBURGER TUGMASI BO'LGAN TOP-BAR (Menyular bu yerda ko'rinmaydi) -->
-    <div class="md:hidden bg-gray-900 text-white px-4 py-3 flex items-center justify-between shrink-0 border-b border-gray-800">
+    <div class="md:hidden bg-tent-900 text-dune-50 px-4 py-3 flex items-center justify-between shrink-0 border-b border-white/10">
         <div class="flex items-center gap-3">
             <!-- HAMBURGER ICON BUTTON -->
-            <button type="button" onclick="toggleSidebar()" aria-label="Open Menu" class="p-2 text-gray-200 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <button type="button" onclick="toggleSidebar()" aria-label="Open Menu" class="p-2 text-dune-200 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-copper-400 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
             </button>
-            <div>
-                <h2 class="text-base font-bold tracking-wider leading-none">KARAVAN</h2>
-                <p class="text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-0.5">Market</p>
+            <div class="flex items-center gap-2">
+                <img src="{% static 'icons/icon.png' %}" alt="" class="w-7 h-7 rounded-md">
+                <div>
+                    <h2 class="text-sm font-bold tracking-tight leading-none">Karavan</h2>
+                    <p class="text-[10px] text-copper-400 leading-none mt-1">Market</p>
+                </div>
             </div>
         </div>
-        <span class="text-xs font-semibold text-gray-300 bg-gray-800 px-3 py-1 rounded-full">Ta'minotchi</span>
+        <span class="text-[11px] font-medium text-dune-200 bg-white/5 px-3 py-1 rounded-full border border-white/10">Ta'minotchi</span>
     </div>
 
     <!-- MOBIL MENYU FONINI QORAYTIRISH (OVERLAY) -->
-    <!-- PERF: removed backdrop-blur-sm + transition-opacity (expensive full-screen GPU blur on old PCs) -->
-    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-gray-900/60 z-40 hidden md:hidden"></div>
+    <!-- PERF: no backdrop-blur (expensive full-screen GPU blur on old PCs) -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-tent-900/70 z-40 hidden md:hidden"></div>
 
     <!-- YON MENYU (SIDEBAR - Telefonda yashiringan, Gamburger bosilsa chiqadi) -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white flex flex-col shrink-0 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
-        <div class="p-5 flex justify-between items-center border-b border-gray-800 md:border-b-0">
-            <div>
-                <h2 class="text-xl font-bold tracking-wider">KARAVAN</h2>
-                <p class="text-xs text-gray-400 uppercase tracking-widest">Market</p>
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-tent-900 text-dune-100 flex flex-col shrink-0 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
+        <div class="p-5 flex justify-between items-center border-b border-white/[0.06] md:border-b-0">
+            <div class="flex items-center gap-2.5">
+                <img src="{% static 'icons/icon.png' %}" alt="Karavan" class="w-9 h-9 rounded-lg shadow-card">
+                <div>
+                    <h2 class="text-lg font-bold tracking-tight leading-none text-white">Karavan</h2>
+                    <p class="text-[10px] text-copper-400 font-medium tracking-[0.2em] leading-none mt-1.5">MARKET</p>
+                </div>
             </div>
             <!-- Menyuni yopish tugmasi (X) -->
-            <button type="button" onclick="toggleSidebar()" class="md:hidden p-2 text-gray-400 hover:text-white rounded-lg">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <button type="button" onclick="toggleSidebar()" class="md:hidden p-2 text-dune-300 hover:text-white rounded-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
             </button>
         </div>
-        
+
         <!-- BARCHA NAVIGATSIYA HAVOLALARI FAQAT SHU YERDA -->
-        <nav class="flex flex-col px-4 py-4 gap-1.5 overflow-y-auto">
-            <a href="{% url 'dashboard' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Boshqaruv paneli</a>
-            <a href="{% url 'pos' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Kassa</a>
-            <a href="{% url 'products' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Mahsulotlar</a>
-            <a href="{% url 'supplier_payments' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white transition">Ta'minotchi</a>
-            <a href="{% url 'personal_expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Xarajatlar</a>
-            
+        <nav class="flex flex-col px-4 md:px-6 py-4 gap-0.5 overflow-y-auto mt-1">
+            <p class="px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-dune-300/50 mb-2 mt-1">Boshqarish</p>
+
+            <a href="{% url 'dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                Boshqaruv paneli
+            </a>
+            <a href="{% url 'pos' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M5 6h14a1 1 0 011 1v11a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1zm3 8h4"></path>
+                </svg>
+                Kassa
+            </a>
+            <a href="{% url 'products' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+                Mahsulotlar
+            </a>
+            <a href="{% url 'supplier_payments' %}" class="nav-active flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold bg-white/[0.06] text-white transition">
+                <svg class="w-[18px] h-[18px] shrink-0 text-copper-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5V9a1 1 0 011-1h9l4 4v4.5a1 1 0 01-1 1H4a1 1 0 01-1-1z"></path>
+                    <circle cx="7.5" cy="17.5" r="1.5" stroke-width="1.8"></circle>
+                    <circle cx="16.5" cy="17.5" r="1.5" stroke-width="1.8"></circle>
+                </svg>
+                Ta'minotchi
+            </a>
+            <a href="{% url 'personal_expenses' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 3h9l3 3v15a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1zm9 0v3h3M8 12h8M8 16h5"></path>
+                </svg>
+                Xarajatlar
+            </a>
+
         </nav>
     </aside>
 
     <!-- ASOSIY MASHG'ULOT MAYDONI -->
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-        
+
         <!-- PAGE HEADER -->
-        <header class="bg-white border-b border-gray-200 p-4 md:p-6 shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <header class="bg-dune-50/90 backdrop-blur border-b border-dune-200 p-4 md:p-6 shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Ta'minotchi</h1>
-                <p class="text-sm text-gray-500">{{ today }}</p>
+                <h1 class="text-2xl font-bold text-ink-900 tracking-tight">Ta'minotchi</h1>
+                <p class="text-sm text-ink-500 mt-0.5">{{ today }}</p>
             </div>
             <div class="flex gap-2 w-full sm:w-auto">
-                <button type="button" onclick="openModal('addsupplierModal')" class="flex-1 sm:flex-none justify-center items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition">
+                <button type="button" onclick="openModal('addsupplierModal')" class="flex-1 sm:flex-none justify-center items-center px-4 py-2 bg-white border border-dune-200 rounded-lg text-sm font-medium text-ink-700 hover:bg-dune-100 transition">
                     + Ta'minotchi
                 </button>
-                <button type="button" onclick="openModal('addExpenseModal')" class="flex-1 sm:flex-none justify-center items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
+                <button type="button" onclick="openModal('addExpenseModal')" class="flex-1 sm:flex-none justify-center items-center px-4 py-2 bg-copper-500 text-white rounded-lg text-sm font-semibold hover:bg-copper-600 transition shadow-card">
                     + Xarajat
                 </button>
             </div>
@@ -111,99 +192,99 @@
 
 
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <p class="text-xs text-gray-500 font-medium uppercase">Bugun</p>
-                    <p class="text-xl md:text-2xl font-bold mt-1">{{ today_total_supplier_payments|intcomma }} so'm</p>
+                <div class="bg-white p-4 rounded-2xl border border-dune-200 shadow-card">
+                    <p class="text-xs text-ink-500 font-medium uppercase">Bugun</p>
+                    <p class="text-xl md:text-2xl font-bold mt-1 text-ink-900">{{ today_total_supplier_payments|intcomma }} so'm</p>
                 </div>
-                <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <p class="text-xs text-gray-500 font-medium uppercase">7 kun</p>
-                    <p class="text-xl md:text-2xl font-bold mt-1">{{ week_total_supplier_payments|intcomma }} so'm</p>
+                <div class="bg-white p-4 rounded-2xl border border-dune-200 shadow-card">
+                    <p class="text-xs text-ink-500 font-medium uppercase">7 kun</p>
+                    <p class="text-xl md:text-2xl font-bold mt-1 text-ink-900">{{ week_total_supplier_payments|intcomma }} so'm</p>
                 </div>
-                <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <p class="text-xs text-gray-500 font-medium uppercase">Oy</p>
-                    <p class="text-xl md:text-2xl font-bold mt-1">{{ month_total_supplier_payments|intcomma }} so'm</p>
+                <div class="bg-white p-4 rounded-2xl border border-dune-200 shadow-card">
+                    <p class="text-xs text-ink-500 font-medium uppercase">Oy</p>
+                    <p class="text-xl md:text-2xl font-bold mt-1 text-ink-900">{{ month_total_supplier_payments|intcomma }} so'm</p>
                 </div>
-                <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <p class="text-xs text-gray-500 font-medium uppercase">{{ supplier_most_expenses.supplier__name|default:"Eng ko'p" }}</p>
-                    <p class="text-xl md:text-2xl font-bold mt-1 text-red-600">{{ supplier_most_expenses.total|intcomma|default:"0" }} so'm</p>
+                <div class="bg-white p-4 rounded-2xl border border-dune-200 shadow-card">
+                    <p class="text-xs text-ink-500 font-medium uppercase">{{ top_supplier_by_payments.supplier__name|default:"Eng ko'p" }}</p>
+                    <p class="text-xl md:text-2xl font-bold mt-1 text-rust-500">{{ top_supplier_by_payments.total|intcomma|default:"0" }} so'm</p>
                 </div>
             </div>
 
 
-            <form method="GET" action="{% url 'supplier_payments' %}" class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row flex-wrap items-end gap-4">
+            <form method="GET" action="{% url 'supplier_payments' %}" class="bg-white p-4 rounded-2xl border border-dune-200 shadow-card flex flex-col sm:flex-row flex-wrap items-end gap-4">
                 {% csrf_token %}
                 <div class="w-full sm:w-auto flex-1 sm:flex-none">
-                    <label class="block text-xs text-gray-500 mb-1">Boshlanish</label>
-                    <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <label class="block text-xs text-ink-500 mb-1">Boshlanish</label>
+                    <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="w-full px-3 py-2 border border-dune-200 bg-dune-50 rounded-lg text-sm text-ink-900 focus:ring-2 focus:ring-copper-400 focus:border-copper-400 focus:outline-none focus:bg-white transition">
                 </div>
                 <div class="w-full sm:w-auto flex-1 sm:flex-none">
-                    <label class="block text-xs text-gray-500 mb-1">Tugash</label>
-                    <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <label class="block text-xs text-ink-500 mb-1">Tugash</label>
+                    <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="w-full px-3 py-2 border border-dune-200 bg-dune-50 rounded-lg text-sm text-ink-900 focus:ring-2 focus:ring-copper-400 focus:border-copper-400 focus:outline-none focus:bg-white transition">
                 </div>
                 <div class="w-full sm:w-auto flex-1">
-                    <label class="block text-xs text-gray-500 mb-1">Ta'minotchi</label>
-                    <select name="supplier" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                    <label class="block text-xs text-ink-500 mb-1">Ta'minotchi</label>
+                    <select name="supplier" class="w-full px-3 py-2 border border-dune-200 rounded-lg text-sm text-ink-900 focus:ring-2 focus:ring-copper-400 focus:border-copper-400 focus:outline-none bg-dune-50 focus:bg-white transition">
                         <option value="">Barchasi</option>
                         {% for supplier in suppliers %}
-                        <option value="{{ supplier.id }}" {% if request.GET.supplier == cat.id|stringformat:"s" %}selected{% endif %}>{{ supplier.name }}</option>
+                        <option value="{{ supplier.id }}" {% if request.GET.supplier == supplier.id|stringformat:"s" %}selected{% endif %}>{{ supplier.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="flex gap-2 w-full sm:w-auto">
-                    <button type="submit" class="flex-1 sm:flex-none px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 transition">Filtrlash</button>
-                    <a href="{% url 'supplier_payments' %}" class="flex-1 sm:flex-none px-4 py-2 text-center bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Tozalash</a>
+                    <button type="submit" class="flex-1 sm:flex-none px-4 py-2 bg-tent-900 text-white rounded-lg text-sm font-semibold hover:bg-tent-800 transition">Filtrlash</button>
+                    <a href="{% url 'supplier_payments' %}" class="flex-1 sm:flex-none px-4 py-2 text-center bg-dune-100 text-ink-700 rounded-lg text-sm font-medium hover:bg-dune-200 transition">Tozalash</a>
                 </div>
             </form>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-                
+
                 <!-- JADVAL -->
-                <div class="lg:col-span-2 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-                    <div class="p-4 border-b border-gray-200 flex justify-between items-center gap-4 h-[58px]">
-                        <input id="searchInput" type="text" placeholder="Qidirish..." class="w-full max-w-xs px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        <span id="resultsSummary" class="text-xs text-gray-500 font-medium"></span>
+                <div class="lg:col-span-2 bg-white border border-dune-200 rounded-2xl shadow-card overflow-hidden flex flex-col">
+                    <div class="p-4 border-b border-dune-200 flex justify-between items-center gap-4 h-[58px] bg-dune-100/50">
+                        <input id="searchInput" type="text" placeholder="Qidirish..." class="w-full max-w-xs px-3 py-2 bg-white border border-dune-200 rounded-lg text-sm text-ink-900 placeholder:text-ink-400 focus:ring-2 focus:ring-copper-400 focus:border-copper-400 focus:outline-none transition">
+                        <span id="resultsSummary" class="text-xs text-ink-500 font-medium"></span>
                     </div>
 
                     <div class="overflow-x-auto fixed-card-body">
                         <table class="w-full text-sm text-left">
-                            <thead class="bg-gray-50 text-gray-500 text-xs uppercase border-b border-gray-200">
+                            <thead class="bg-dune-100/50 text-ink-500 text-xs uppercase border-b border-dune-200">
                                 <tr>
-                                    <th class="px-4 py-3 font-medium cursor-pointer select-none sort-btn" data-sort-key="date" onclick="setSort('date')">Sana <span class="sort-arrow">▲</span></th>
-                                    <th class="px-4 py-3 font-medium cursor-pointer select-none sort-btn" data-sort-key="amount" onclick="setSort('amount')">Summa <span class="sort-arrow">▲</span></th>
-                                    <th class="px-4 py-3 font-medium cursor-pointer select-none sort-btn" data-sort-key="supplier" onclick="setSort('supplier')">Ta'minotchi <span class="sort-arrow">▲</span></th>
-                                    <th class="px-4 py-3 font-medium cursor-pointer select-none sort-btn" data-sort-key="note" onclick="setSort('note')">Tavsif <span class="sort-arrow">▲</span></th>
+                                    <th class="px-4 py-3 font-semibold cursor-pointer select-none sort-btn" data-sort-key="date" onclick="setSort('date')">Sana <span class="sort-arrow">▲</span></th>
+                                    <th class="px-4 py-3 font-semibold cursor-pointer select-none sort-btn" data-sort-key="amount" onclick="setSort('amount')">Summa <span class="sort-arrow">▲</span></th>
+                                    <th class="px-4 py-3 font-semibold cursor-pointer select-none sort-btn" data-sort-key="supplier" onclick="setSort('supplier')">Ta'minotchi <span class="sort-arrow">▲</span></th>
+                                    <th class="px-4 py-3 font-semibold cursor-pointer select-none sort-btn" data-sort-key="note" onclick="setSort('note')">Tavsif <span class="sort-arrow">▲</span></th>
                                 </tr>
                             </thead>
-                            <tbody id="expensesBody" class="divide-y divide-gray-100">
+                            <tbody id="expensesBody" class="divide-y divide-dune-100">
                                 {% for payment in supplier_payments %}
-                                <tr class="expense-row hover:bg-gray-50 transition"
+                                <tr class="expense-row hover:bg-dune-50 transition"
                                     data-date="{{ payment.created_at|date:'Y-m-d' }}"
                                     data-amount="{{ payment.amount }}"
                                     data-supplier="{{ payment.supplier }}"
                                     data-note="{{ payment.note|default:'' }}">
-                                    <td class="px-4 py-3 text-gray-500 whitespace-nowrap">{{ payment.created_at|date:"d.m.Y" }}</td>
-                                    <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{{ payment.amount|intcomma }} so'm</td>
+                                    <td class="px-4 py-3 text-ink-500 whitespace-nowrap">{{ payment.created_at|date:"d.m.Y" }}</td>
+                                    <td class="px-4 py-3 font-medium text-ink-900 whitespace-nowrap">{{ payment.amount|intcomma }} so'm</td>
                                     <td class="px-4 py-3">
-                                        <span class="inline-flex items-center gap-1.5 text-gray-700">
+                                        <span class="inline-flex items-center gap-1.5 text-ink-700">
                                             <span class="cat-dot"></span>{{ payment.supplier }}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-3 text-gray-500 truncate max-w-[150px]">{{ payment.note|default:"—" }}</td>
+                                    <td class="px-4 py-3 text-ink-500 truncate max-w-[150px]">{{ payment.note|default:"—" }}</td>
                                 </tr>
                                 {% empty %}
-                                <tr id="emptyDbRow"><td colspan="4" class="px-4 py-8 text-center text-gray-400">Ta'minotchi mavjud emas</td></tr>
+                                <tr id="emptyDbRow"><td colspan="4" class="px-4 py-8 text-center text-ink-400">Ta'minotchi mavjud emas</td></tr>
                                 {% endfor %}
                                 <tr id="noResultsRow" class="hidden">
-                                    <td colspan="4" class="px-4 py-8 text-center text-gray-400">Filtrga mos kelmadi</td>
+                                    <td colspan="4" class="px-4 py-8 text-center text-ink-400">Filtrga mos kelmadi</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
 
-                    <div class="p-4 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4 sm:h-[68px]">
-                        <div class="flex items-center gap-2 text-sm text-gray-500">
+                    <div class="p-4 border-t border-dune-200 bg-dune-100/50 flex flex-col sm:flex-row justify-between items-center gap-4 sm:h-[68px]">
+                        <div class="flex items-center gap-2 text-sm text-ink-500">
                             <span>Qatorlar:</span>
-                            <select id="pageSizeSelect" class="bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none">
+                            <select id="pageSizeSelect" class="bg-white border border-dune-200 rounded px-2 py-1 text-ink-900 focus:outline-none focus:ring-2 focus:ring-copper-400">
                                 <option value="10">10</option>
                                 <option value="25">25</option>
                                 <option value="50">50</option>
@@ -214,33 +295,33 @@
                 </div>
 
                 <!-- KATEGORIYALAR -->
-                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-                    <div class="p-4 border-b border-gray-200 flex justify-between items-center gap-4 h-[58px]">
-                        <h3 class="font-bold text-gray-900 whitespace-nowrap">Ta'minotchilar</h3>
+                <div class="bg-white border border-dune-200 rounded-2xl shadow-card overflow-hidden flex flex-col">
+                    <div class="p-4 border-b border-dune-200 flex justify-between items-center gap-4 h-[58px] bg-dune-100/50">
+                        <h3 class="font-bold text-ink-900 whitespace-nowrap">Ta'minotchilar</h3>
                         <div class="flex items-center gap-3">
-                            <span id="supplierResultsSummary" class="text-xs text-gray-500 font-medium"></span>
-                            <button type="button" onclick="openModal('addsupplierModal')" class="text-sm text-blue-600 hover:underline whitespace-nowrap">+ Yangi</button>
+                            <span id="supplierResultsSummary" class="text-xs text-ink-500 font-medium"></span>
+                            <button type="button" onclick="openModal('addsupplierModal')" class="text-sm text-copper-600 hover:underline whitespace-nowrap font-medium">+ Yangi</button>
                         </div>
                     </div>
                     <div class="fixed-card-body overflow-y-auto">
-                        <ul id="supplierList" class="divide-y divide-gray-100">
+                        <ul id="supplierList" class="divide-y divide-dune-100">
                             {% for payment in supplier_payments_by_supplier %}
-                            <li class="supplier-row px-4 py-3 flex justify-between items-center hover:bg-gray-50 cursor-pointer transition" onclick="window.location.href='{% url 'supplier_detail' payment.id %}'">
-                                <span class="text-sm font-medium text-gray-700 inline-flex items-center gap-2">
+                            <li class="supplier-row px-4 py-3 flex justify-between items-center hover:bg-dune-50 cursor-pointer transition" onclick="window.location.href='{% url 'supplier_detail' payment.id %}'">
+                                <span class="text-sm font-medium text-ink-700 inline-flex items-center gap-2">
                                     <span class="payment-dot"></span>{{ payment.name }}
                                 </span>
-                                <span class="text-sm font-bold text-gray-900">{{ payment.total|intcomma }}</span>
+                                <span class="text-sm font-bold text-ink-900">{{ payment.total|intcomma }}</span>
                             </li>
                             {% empty %}
-                            <li class="p-4 text-center text-gray-400 text-sm">Ma'lumot yo'q</li>
+                            <li class="p-4 text-center text-ink-400 text-sm">Ma'lumot yo'q</li>
                             {% endfor %}
                         </ul>
-                        <p id="supplierNoResults" class="hidden p-4 text-center text-gray-400 text-sm">Kategoriya topilmadi</p>
+                        <p id="supplierNoResults" class="hidden p-4 text-center text-ink-400 text-sm">Kategoriya topilmadi</p>
                     </div>
-                    <div class="p-4 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4 sm:h-[68px]">
-                        <div class="flex items-center gap-2 text-sm text-gray-500">
+                    <div class="p-4 border-t border-dune-200 bg-dune-100/50 flex flex-col sm:flex-row justify-between items-center gap-4 sm:h-[68px]">
+                        <div class="flex items-center gap-2 text-sm text-ink-500">
                             <span>Qatorlar:</span>
-                            <select id="supplierPageSizeSelect" class="bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none">
+                            <select id="supplierPageSizeSelect" class="bg-white border border-dune-200 rounded px-2 py-1 text-ink-900 focus:outline-none focus:ring-2 focus:ring-copper-400">
                                 <option value="6">6</option>
                                 <option value="10" selected>10</option>
                                 <option value="20">20</option>
@@ -253,25 +334,25 @@
             </div>
         </div>
     </div>
-    
+
     <!-- MODALLAR -->
-    <!-- PERF: removed backdrop-blur-sm -->
-    <div id="addExpenseModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden" onclick="event.stopPropagation()">
-            <div class="p-4 border-b flex justify-between items-center">
-                <h3 class="text-lg font-bold">Xarajat qo'shish</h3>
-                <button onclick="closeModal('addExpenseModal')" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+    <!-- PERF: no backdrop-blur -->
+    <div id="addExpenseModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-tent-900/60">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-dune-200" onclick="event.stopPropagation()">
+            <div class="p-4 border-b border-dune-200 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-ink-900">Xarajat qo'shish</h3>
+                <button onclick="closeModal('addExpenseModal')" class="text-ink-400 hover:text-ink-700 text-2xl leading-none">&times;</button>
             </div>
             <form method="POST" action="{% url 'add_supplier_payment' %}" class="p-4 space-y-4">
                 {% csrf_token %}
                 <div>
-                    <label class="block text-sm text-gray-600 mb-1">Sana</label>
-                    <input type="date" name="date" value="{% now 'Y-m-d' %}" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <label class="block text-sm text-ink-700 mb-1">Sana</label>
+                    <input type="date" name="date" value="{% now 'Y-m-d' %}" required class="w-full px-3 py-2 border border-dune-200 bg-dune-50 rounded-lg text-ink-900 focus:ring-2 focus:ring-copper-400 focus:border-copper-400 outline-none focus:bg-white transition">
                 </div>
-                
+
                 <div>
-                    <label class="block text-sm text-gray-600 mb-1">Kategoriya</label>
-                    
+                    <label class="block text-sm text-ink-700 mb-1">Kategoriya</label>
+
                     <select id="expensesupplierSelect" name="supplier" required class="w-full">
                     <option value="" disabled selected>Search supplier...</option>
                     {% for cat in categories %}
@@ -281,37 +362,37 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm text-gray-600 mb-1">Summa (so'm)</label>
-                    <input type="number" name="amount" min="0" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <label class="block text-sm text-ink-700 mb-1">Summa (so'm)</label>
+                    <input type="number" name="amount" min="0" required class="w-full px-3 py-2 border border-dune-200 bg-dune-50 rounded-lg text-ink-900 focus:ring-2 focus:ring-copper-400 focus:border-copper-400 outline-none focus:bg-white transition">
                 </div>
                 <div>
-                    <label class="block text-sm text-gray-600 mb-1">Tavsif (ixtiyoriy)</label>
-                    <input type="text" name="note" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <label class="block text-sm text-ink-700 mb-1">Tavsif (ixtiyoriy)</label>
+                    <input type="text" name="note" class="w-full px-3 py-2 border border-dune-200 bg-dune-50 rounded-lg text-ink-900 focus:ring-2 focus:ring-copper-400 focus:border-copper-400 outline-none focus:bg-white transition">
                 </div>
                 <div class="pt-4 flex justify-end gap-2">
-                    <button type="button" onclick="closeModal('addExpenseModal')" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm">Bekor qilish</button>
-                    <button type="submit" class="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium">Saqlash</button>
+                    <button type="button" onclick="closeModal('addExpenseModal')" class="px-4 py-2 text-ink-700 bg-dune-100 hover:bg-dune-200 rounded-lg text-sm font-medium">Bekor qilish</button>
+                    <button type="submit" class="px-4 py-2 text-white bg-copper-500 hover:bg-copper-600 rounded-lg text-sm font-semibold">Saqlash</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- PERF: removed backdrop-blur-sm -->
-    <div id="addsupplierModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden" onclick="event.stopPropagation()">
-            <div class="p-4 border-b flex justify-between items-center">
-                <h3 class="text-lg font-bold">Kategoriya qo'shish</h3>
-                <button onclick="closeModal('addsupplierModal')" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+    <!-- PERF: no backdrop-blur -->
+    <div id="addsupplierModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-tent-900/60">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden border border-dune-200" onclick="event.stopPropagation()">
+            <div class="p-4 border-b border-dune-200 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-ink-900">Kategoriya qo'shish</h3>
+                <button onclick="closeModal('addsupplierModal')" class="text-ink-400 hover:text-ink-700 text-2xl leading-none">&times;</button>
             </div>
             <form method="POST" action="{% url 'add_supplier' %}" class="p-4 space-y-4">
                 {% csrf_token %}
                 <div>
-                    <label class="block text-sm text-gray-600 mb-1">Kategoriya nomi</label>
-                    <input id="supplierName" type="text" name="name" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <label class="block text-sm text-ink-700 mb-1">Kategoriya nomi</label>
+                    <input id="supplierName" type="text" name="name" required class="w-full px-3 py-2 border border-dune-200 bg-dune-50 rounded-lg text-ink-900 focus:ring-2 focus:ring-copper-400 focus:border-copper-400 outline-none focus:bg-white transition">
                 </div>
                 <div class="pt-4 flex justify-end gap-2">
-                    <button type="button" onclick="closeModal('addsupplierModal')" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm">Bekor qilish</button>
-                    <button type="submit" class="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium">Saqlash</button>
+                    <button type="button" onclick="closeModal('addsupplierModal')" class="px-4 py-2 text-ink-700 bg-dune-100 hover:bg-dune-200 rounded-lg text-sm font-medium">Bekor qilish</button>
+                    <button type="submit" class="px-4 py-2 text-white bg-copper-500 hover:bg-copper-600 rounded-lg text-sm font-semibold">Saqlash</button>
                 </div>
             </form>
         </div>
@@ -352,7 +433,7 @@
     function openModal(id) {
         const modal = document.getElementById(id);
         if (!modal) return;
-        
+
         modal.classList.remove('hidden');
 
         // If opening the supplier modal, focus and select the input after it becomes visible
@@ -446,28 +527,28 @@
             }
         }
     }
-    
+
     function renderPagination(totalPages) {
         pageButtons.innerHTML = '';
         const btn = (label, target, opts = {}) => {
             const b = document.createElement('button');
             b.type = 'button'; b.textContent = label; b.disabled = !!opts.disabled;
             if (opts.active) b.dataset.active = 'true';
-            
-            b.className = 'page-btn w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition';
-            
+
+            b.className = 'page-btn w-8 h-8 flex items-center justify-center rounded border border-dune-200 bg-white text-ink-700 text-sm hover:bg-dune-100 disabled:opacity-50 disabled:cursor-not-allowed transition';
+
             b.onclick = () => { page = target; render(); };
             pageButtons.appendChild(b);
         };
-        
+
         btn('‹', page - 1, { disabled: page === 1 });
         for (let p = 1; p <= totalPages; p++) {
             if (p === 1 || p === totalPages || Math.abs(p - page) <= 1) {
                 btn(String(p), p, { active: p === page });
             } else if (Math.abs(p - page) === 2) {
-                const s = document.createElement('span'); 
-                s.textContent = '…'; 
-                s.className = 'px-1 text-gray-400'; 
+                const s = document.createElement('span');
+                s.textContent = '…';
+                s.className = 'px-1 text-ink-400';
                 pageButtons.appendChild(s);
             }
         }
@@ -517,7 +598,7 @@
             b.type = 'button'; b.textContent = label; b.disabled = !!opts.disabled;
             if (opts.active) b.dataset.active = 'true';
 
-            b.className = 'page-btn w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white text-gray-600 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition';
+            b.className = 'page-btn w-8 h-8 flex items-center justify-center rounded border border-dune-200 bg-white text-ink-700 text-sm hover:bg-dune-100 disabled:opacity-50 disabled:cursor-not-allowed transition';
 
             b.onclick = () => { supplierPage = target; rendersupplierPage(); };
             supplierPageButtons.appendChild(b);
@@ -530,7 +611,7 @@
             } else if (Math.abs(p - supplierPage) === 2) {
                 const s = document.createElement('span');
                 s.textContent = '…';
-                s.className = 'px-1 text-gray-400';
+                s.className = 'px-1 text-ink-400';
                 supplierPageButtons.appendChild(s);
             }
         }

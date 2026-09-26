@@ -8,13 +8,13 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="{% url 'manifest' %}">
     <link rel="icon" href="{% static 'icons/icon.png' %}" type="image/x-icon">
 
-    <meta name="theme-color" content="#111827">
+    <meta name="theme-color" content="#211A14">
 
     <script>
     if ('serviceWorker' in navigator) {
@@ -22,14 +22,36 @@
     }
     </script>
 
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Manrope', 'sans-serif'] },
+                    colors: {
+                        /* Karavan — desert / caravan palette. Warm sand, deep tent-charcoal,
+                           copper as the single accent, sage + rust used sparingly for signal. */
+                        dune:    { 50: '#FAF7F1', 100: '#F3ECDF', 200: '#E6D9C1', 300: '#D3BE97' },
+                        tent:    { 900: '#1E1812', 800: '#241D16', 700: '#2E251C' },
+                        ink:     { 900: '#241C14', 700: '#4A4034', 500: '#8A7D6C', 400: '#A69A87' },
+                        copper:  { 400: '#DE9A56', 500: '#C1692F', 600: '#A6551F', 700: '#8A4419' },
+                        sage:    { 500: '#6E8F6C', 50: '#EEF3ED' },
+                        rust:    { 500: '#B85C45', 50: '#FBEFEA' },
+                    },
+                    boxShadow: {
+                        card: '0 1px 2px rgba(36, 28, 20, 0.04), 0 8px 24px -8px rgba(36, 28, 20, 0.08)',
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
-        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
-        .font-mono { font-family: 'IBM Plex Mono', monospace; }
+        body { font-family: 'Manrope', sans-serif; -webkit-font-smoothing: antialiased; }
 
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 999px; }
-        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        ::-webkit-scrollbar-thumb { background: #D3BE97; border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #C1692F; }
 
         @media (prefers-reduced-motion: reduce) {
             * { transition: none !important; animation: none !important; }
@@ -37,64 +59,113 @@
     </style>
 </head>
 
-<body class="bg-gray-50 text-gray-900 h-screen flex flex-col md:flex-row overflow-hidden">
+<body class="bg-dune-50 text-ink-900 h-screen flex flex-col md:flex-row overflow-hidden">
 
-    <div class="md:hidden bg-gray-900 text-white px-4 py-3 flex items-center justify-between shrink-0 border-b border-gray-800">
+    <div class="md:hidden bg-tent-900 text-dune-50 px-4 py-3 flex items-center justify-between shrink-0 border-b border-white/10">
         <div class="flex items-center gap-3">
-            <button type="button" onclick="toggleSidebar()" aria-label="Open Menu" class="p-2 text-gray-200 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <button type="button" onclick="toggleSidebar()" aria-label="Open Menu" class="p-2 text-dune-200 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-copper-400 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
             </button>
-            <div>
-                <h2 class="text-base font-bold tracking-wider leading-none">KARAVAN</h2>
-                <p class="text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-0.5">Market</p>
+            <div class="flex items-center gap-2">
+                <img src="{% static 'icons/icon.png' %}" alt="" class="w-7 h-7 rounded-md">
+                <div>
+                    <h2 class="text-sm font-bold tracking-tight leading-none">Karavan</h2>
+                    <p class="text-[10px] text-copper-400 leading-none mt-1">Market</p>
+                </div>
             </div>
         </div>
-        <span class="text-xs font-semibold text-gray-300 bg-gray-800 px-3 py-1 rounded-full">Mahsulotlar</span>
+        <span class="text-[11px] font-medium text-dune-200 bg-white/5 px-3 py-1 rounded-full border border-white/10">Mahsulotlar</span>
     </div>
 
-    <!-- PERF: removed backdrop-blur-sm (very expensive full-screen blur on old/integrated GPUs) -->
-    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-gray-900/60 z-40 hidden md:hidden"></div>
+    <!-- PERF: no backdrop-blur on the overlay (expensive full-screen blur on old/integrated GPUs) -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-tent-900/70 z-40 hidden md:hidden"></div>
 
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white flex flex-col shrink-0 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
-        <div class="p-5 flex justify-between items-center border-b border-gray-800 md:border-b-0">
-            <div>
-                <h2 class="text-xl font-bold tracking-wider">KARAVAN</h2>
-                <p class="text-xs text-gray-400 uppercase tracking-widest">Market</p>
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-tent-900 text-dune-100 flex flex-col shrink-0 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
+        <div class="p-5 flex justify-between items-center border-b border-white/[0.06] md:border-b-0">
+            <div class="flex items-center gap-2.5">
+                <img src="{% static 'icons/icon.png' %}" alt="Karavan" class="w-9 h-9 rounded-lg shadow-card">
+                <div>
+                    <h2 class="text-lg font-bold tracking-tight leading-none text-white">Karavan</h2>
+                    <p class="text-[10px] text-copper-400 font-medium tracking-[0.2em] leading-none mt-1.5">MARKET</p>
+                </div>
             </div>
-            <button type="button" onclick="toggleSidebar()" class="md:hidden p-2 text-gray-400 hover:text-white rounded-lg">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <button type="button" onclick="toggleSidebar()" class="md:hidden p-2 text-dune-300 hover:text-white rounded-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
             </button>
         </div>
-        
-        <nav class="flex flex-col px-4 py-4 gap-1.5 overflow-y-auto">
-            <a href="{% url 'dashboard' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Boshqaruv paneli</a>
-            <a href="{% url 'pos' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Kassa</a>
-            <a href="{% url 'products' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white transition">Mahsulotlar</a>
-            <a href="{% url 'supplier_payments' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Ta'minotchi</a>
-            <a href="{% url 'personal_expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Xarajatlar</a>
-       </nav>
+
+        <nav class="flex flex-col px-4 md:px-6 py-4 gap-0.5 overflow-y-auto mt-1">
+            <p class="px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-dune-300/50 mb-2 mt-1">Boshqarish</p>
+
+            <a href="{% url 'dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                Boshqaruv paneli
+            </a>
+            <a href="{% url 'pos' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M5 6h14a1 1 0 011 1v11a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1zm3 8h4"></path>
+                </svg>
+                Kassa
+            </a>
+            <a href="{% url 'products' %}" class="nav-active flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold bg-white/[0.06] text-white transition relative">
+                <svg class="w-[18px] h-[18px] shrink-0 text-copper-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+                Mahsulotlar
+            </a>
+            <a href="{% url 'supplier_payments' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5V9a1 1 0 011-1h9l4 4v4.5a1 1 0 01-1 1H4a1 1 0 01-1-1z"></path>
+                    <circle cx="7.5" cy="17.5" r="1.5" stroke-width="1.8"></circle>
+                    <circle cx="16.5" cy="17.5" r="1.5" stroke-width="1.8"></circle>
+                </svg>
+                Ta'minotchi
+            </a>
+            <a href="{% url 'personal_expenses' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 3h9l3 3v15a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1zm9 0v3h3M8 12h8M8 16h5"></path>
+                </svg>
+                Xarajatlar
+            </a>
+        </nav>
     </aside>
+
+    <style>
+        .nav-active::before {
+            content: '';
+            position: absolute;
+            left: -16px; top: 6px; bottom: 6px;
+            width: 3px;
+            border-radius: 999px;
+            background: #DE9A56;
+        }
+    </style>
 
     <div class="flex-1 min-w-0 flex flex-col overflow-hidden">
 
-        <header class="p-4 md:p-6 shrink-0 bg-white border-b border-gray-200">
-            <a href="{% url 'products' %}" class="text-sm font-medium text-gray-500 hover:text-blue-600 transition inline-flex items-center gap-1 mb-2">
-                &larr; Mahsulotlar
+        <header class="p-4 md:p-6 shrink-0 bg-dune-50/90 backdrop-blur border-b border-dune-200">
+            <a href="{% url 'products' %}" class="text-sm font-medium text-ink-500 hover:text-copper-600 transition inline-flex items-center gap-1 mb-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Mahsulotlar
             </a>
             <div class="flex items-start justify-between gap-4 flex-wrap">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 leading-tight">{{ product.name }}</h1>
-                    <p class="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                        <span class="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-700 border border-gray-200">Shtrix-kod: {{ product.barcode }}</span>
+                    <h1 class="text-2xl font-bold text-ink-900 leading-tight tracking-tight">{{ product.name }}</h1>
+                    <p class="text-sm text-ink-500 mt-1 flex items-center gap-2">
+                        <span class="font-mono bg-dune-100 px-2 py-0.5 rounded text-ink-700 border border-dune-200">Shtrix-kod: {{ product.barcode }}</span>
                     </p>
                 </div>
                 <div class="flex items-center flex-wrap gap-2">
-                    <button type="button" onclick="openReceiveModal()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition shadow-sm">+ Zaxira qabul qilish</button>
-                    <button type="button" onclick="openArchiveModal()" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition shadow-sm">
+                    <button type="button" onclick="openReceiveModal()" class="px-4 py-2 rounded-lg bg-copper-500 hover:bg-copper-600 text-white text-sm font-semibold transition shadow-card">+ Zaxira qabul qilish</button>
+                    <button type="button" onclick="openArchiveModal()" class="px-4 py-2 rounded-lg border border-dune-200 bg-white text-sm font-medium text-ink-700 hover:bg-dune-100 transition shadow-card">
                         {% if product.active %}Arxivlash{% else %}Arxivdan chiqarish{% endif %}
                     </button>
                 </div>
@@ -104,72 +175,72 @@
         <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
             
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 items-start">
-                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                    <p class="text-xs uppercase tracking-wider text-gray-500 font-bold mb-3">Narx</p>
-                    <p class="font-mono text-3xl font-bold text-gray-900">{{ product.sales_price }} so'm</p>
-                    <p class="text-sm text-gray-500 mt-1">{% if product.weight_based %}Kg uchun narx{% else %}Dona uchun narx{% endif %}</p>
+                <div class="bg-white border border-dune-200 rounded-2xl p-5 shadow-card">
+                    <p class="text-xs uppercase tracking-wider text-ink-500 font-bold mb-3">Narx</p>
+                    <p class="font-mono text-3xl font-bold text-ink-900">{{ product.sales_price }} so'm</p>
+                    <p class="text-sm text-ink-500 mt-1">{% if product.weight_based %}Kg uchun narx{% else %}Dona uchun narx{% endif %}</p>
                 </div>
-                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                    <p class="text-xs uppercase tracking-wider text-gray-500 font-bold mb-3">Tannarxi</p>
-                    <p class="font-mono text-3xl font-bold text-gray-900">{{ product.vendor_cost }} so'm</p>
-                    <p class="text-sm text-gray-500 mt-1">{% if product.weight_based %}Kg uchun narx{% else %}Dona uchun narx{% endif %}</p>
+                <div class="bg-white border border-dune-200 rounded-2xl p-5 shadow-card">
+                    <p class="text-xs uppercase tracking-wider text-ink-500 font-bold mb-3">Tannarxi</p>
+                    <p class="font-mono text-3xl font-bold text-ink-900">{{ product.vendor_cost }} so'm</p>
+                    <p class="text-sm text-ink-500 mt-1">{% if product.weight_based %}Kg uchun narx{% else %}Dona uchun narx{% endif %}</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                    <p class="text-xs uppercase tracking-wider text-gray-500 font-bold">Mavjud</p>
-                    <p class="font-mono text-xl font-bold text-gray-900 mt-1.5">{% if product.weight_based %}{{ product.qty }} kg{% else %}{{ product.qty | floatformat }} dona{% endif %}</p>
+                <div class="bg-white border border-dune-200 rounded-2xl p-5 shadow-card">
+                    <p class="text-xs uppercase tracking-wider text-ink-500 font-bold">Mavjud</p>
+                    <p class="font-mono text-xl font-bold text-ink-900 mt-1.5">{% if product.weight_based %}{{ product.qty }} kg{% else %}{{ product.qty | floatformat }} dona{% endif %}</p>
                 </div>
-                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                    <p class="text-xs uppercase tracking-wider text-gray-500 font-bold">Shu hafta sotilgan</p>
-                    <p class="font-mono text-xl font-bold text-gray-900 mt-1.5">{% if product.weight_based %}{{ week_qty_sold }} kg{% else %}{{ week_qty_sold | floatformat }} dona{% endif %}</p>
+                <div class="bg-white border border-dune-200 rounded-2xl p-5 shadow-card">
+                    <p class="text-xs uppercase tracking-wider text-ink-500 font-bold">Shu hafta sotilgan</p>
+                    <p class="font-mono text-xl font-bold text-ink-900 mt-1.5">{% if product.weight_based %}{{ week_qty_sold }} kg{% else %}{{ week_qty_sold | floatformat }} dona{% endif %}</p>
                 </div>
-                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm col-span-2 sm:col-span-1">
-                    <p class="text-xs uppercase tracking-wider text-gray-500 font-bold">Shu haftalik foyda</p>
-                    <p class="font-mono text-xl font-bold text-gray-900 mt-1.5">{{ week_total_profit | floatformat }} so'm</p>
+                <div class="bg-white border border-dune-200 rounded-2xl p-5 shadow-card col-span-2 sm:col-span-1">
+                    <p class="text-xs uppercase tracking-wider text-ink-500 font-bold">Shu haftalik foyda</p>
+                    <p class="font-mono text-xl font-bold text-sage-500 mt-1.5">{{ week_total_profit | floatformat }} so'm</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 items-start pb-6">
 
-                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                    <div class="px-5 py-3.5 border-b border-gray-200 bg-gray-50/50">
-                        <p class="text-xs uppercase tracking-wider text-gray-500 font-bold">Sotuv tarixi</p>
+                <div class="bg-white border border-dune-200 rounded-2xl shadow-card overflow-hidden">
+                    <div class="px-5 py-3.5 border-b border-dune-200 bg-dune-100/50">
+                        <p class="text-xs uppercase tracking-wider text-ink-500 font-bold">Sotuv tarixi</p>
                     </div>
-                    <div id="stockActivityList" class="divide-y divide-gray-100">
+                    <div id="stockActivityList" class="divide-y divide-dune-100">
                         {% for item in week_sale_history %}
-                        <div class="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition">
+                        <div class="px-5 py-3 flex items-center justify-between hover:bg-dune-50 transition">
                             <div>
-                                <p class="text-sm font-medium text-gray-900">Savdo #{{item.sale.id}}</p>
-                                <p class="text-xs text-gray-500 mt-0.5">{{ item.sale.created_at }}</p>
+                                <p class="text-sm font-medium text-ink-900">Savdo #{{item.sale.id}}</p>
+                                <p class="text-xs text-ink-500 mt-0.5">{{ item.sale.created_at }}</p>
                             </div>
-                            <span class="font-mono text-sm font-bold text-red-500">−{% if item.product.weight_based %}{{ item.qty }} kg{% else %}{{ item.qty | floatformat }}{% endif %}</span>
+                            <span class="font-mono text-sm font-bold text-rust-500">−{% if item.product.weight_based %}{{ item.qty }} kg{% else %}{{ item.qty | floatformat }}{% endif %}</span>
                         </div>
                         {% empty %}
                         <div class="px-5 py-8 text-center">
-                            <p class="text-sm text-gray-500">Hozircha savdolar qayd etilmagan.</p>
+                            <p class="text-sm text-ink-500">Hozircha savdolar qayd etilmagan.</p>
                         </div>
                         {% endfor %}
                     </div>
                 </div>
 
-                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                    <div class="px-5 py-3.5 border-b border-gray-200 bg-gray-50/50">
-                        <p class="text-xs uppercase tracking-wider text-gray-500 font-bold">Zaxira to'ldirish tarixi</p>
+                <div class="bg-white border border-dune-200 rounded-2xl shadow-card overflow-hidden">
+                    <div class="px-5 py-3.5 border-b border-dune-200 bg-dune-100/50">
+                        <p class="text-xs uppercase tracking-wider text-ink-500 font-bold">Zaxira to'ldirish tarixi</p>
                     </div>
-                    <div id="restockHistoryList" class="divide-y divide-gray-100">
+                    <div id="restockHistoryList" class="divide-y divide-dune-100">
                         {% for item in restock_history %}
-                        <div class="px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition">
+                        <div class="px-5 py-3 flex items-center justify-between hover:bg-dune-50 transition">
                             <div>
-                                <p class="text-sm font-medium text-gray-900">{{ item.reference|default:"Qo'lda o'zgartirish" }}</p>
-                                <p class="text-xs text-gray-500 mt-0.5">{{ item.created_at }}{% if item.paid %} · {{ item.paid | floatformat }} so'm to'landi{% endif %}</p>
+                                <p class="text-sm font-medium text-ink-900">{{ item.reference|default:"Qo'lda o'zgartirish" }}</p>
+                                <p class="text-xs text-ink-500 mt-0.5">{{ item.created_at }}{% if item.paid %} · {{ item.paid | floatformat }} so'm to'landi{% endif %}</p>
                             </div>
-                            <span class="font-mono text-sm font-bold text-blue-600">+{% if item.product.weight_based %}{{ item.qty }} kg{% else %}{{ item.qty | floatformat }}{% endif %}</span>
+                            <span class="font-mono text-sm font-bold text-copper-600">+{% if item.product.weight_based %}{{ item.qty }} kg{% else %}{{ item.qty | floatformat }}{% endif %}</span>
                         </div>
                         {% empty %}
                         <div class="px-5 py-8 text-center">
-                            <p class="text-sm text-gray-500">Hozircha zaxira to'ldirishlar qayd etilmagan.</p>
+                            <p class="text-sm text-ink-500">Hozircha zaxira to'ldirishlar qayd etilmagan.</p>
                         </div>
                         {% endfor %}
                     </div>
@@ -179,33 +250,33 @@
         </div>
     </div>
 
-    <!-- PERF: modal now uses plain "hidden" toggle instead of opacity/backdrop-blur transition.
+    <!-- PERF: modal uses plain "hidden" toggle instead of opacity/backdrop-blur transition.
          backdrop-blur-sm forces a full-viewport GPU blur repaint on every open/close -
          this is the main cause of lag on old/integrated-GPU machines. -->
     <form method="POST" action="{% url 'restock' product.id %}">{% csrf_token %}
         <div id="receiveModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div onclick="closeReceiveModal()" class="absolute inset-0 bg-gray-900/60"></div>
-            <div class="relative bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden">
-                <div class="px-6 py-5 border-b border-gray-200">
-                    <h3 class="text-lg font-bold text-gray-900">Zaxira qabul qilish</h3>
-                    <p class="text-xs text-gray-500 mt-1">{{ product.name }} · hozirda <span id="rmCurrentStock" class="font-mono">{{ product.qty }}</span> {% if product.weight_based %}kg{% else %}dona{% endif %}</p>
+            <div onclick="closeReceiveModal()" class="absolute inset-0 bg-tent-900/60"></div>
+            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden border border-dune-200">
+                <div class="px-6 py-5 border-b border-dune-200">
+                    <h3 class="text-lg font-bold text-ink-900">Zaxira qabul qilish</h3>
+                    <p class="text-xs text-ink-500 mt-1">{{ product.name }} · hozirda <span id="rmCurrentStock" class="font-mono">{{ product.qty }}</span> {% if product.weight_based %}kg{% else %}dona{% endif %}</p>
                 </div>
 
                 <div class="p-6">
                     <label class="block">
-                        <span class="text-xs font-semibold text-gray-600 mb-1 block uppercase tracking-wider">Qabul qilingan miqdor</span>
+                        <span class="text-xs font-semibold text-ink-500 mb-1 block uppercase tracking-wider">Qabul qilingan miqdor</span>
                         <input id="rmQtyInput" name="qty" type="number" min="1" step="1" inputmode="numeric" placeholder="masalan, 25"
-                            class="w-full px-3 py-2.5 rounded-lg border border-gray-300 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                            class="w-full px-3 py-2.5 rounded-lg border border-dune-200 bg-dune-50 font-mono text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-copper-400 focus:border-copper-400 focus:bg-white transition">
                     </label>
 
-                    <div class="mt-4 px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
-                        <span class="text-sm text-gray-600 font-medium">Yangi zaxira jami</span>
-                        <span id="rmNewTotal" class="font-mono text-lg font-bold text-gray-900">{{ product.qty }} {% if product.weight_based %}kg{% else %}dona{% endif %}</span>
+                    <div class="mt-4 px-4 py-3 rounded-lg bg-dune-50 border border-dune-200 flex items-center justify-between">
+                        <span class="text-sm text-ink-700 font-medium">Yangi zaxira jami</span>
+                        <span id="rmNewTotal" class="font-mono text-lg font-bold text-ink-900">{{ product.qty }} {% if product.weight_based %}kg{% else %}dona{% endif %}</span>
                     </div>
 
                     <div class="flex gap-3 mt-6">
-                        <button type="button" onclick="closeReceiveModal()" class="flex-1 py-2.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-sm font-medium text-gray-700 transition">Bekor qilish</button>
-                        <button type="submit" id="restockSubmitBtn" class="flex-1 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition shadow-sm">Zaxiraga qo'shish</button>
+                        <button type="button" onclick="closeReceiveModal()" class="flex-1 py-2.5 rounded-lg border border-dune-200 bg-white hover:bg-dune-100 text-sm font-medium text-ink-700 transition">Bekor qilish</button>
+                        <button type="submit" id="restockSubmitBtn" class="flex-1 py-2.5 rounded-lg bg-copper-500 hover:bg-copper-600 text-white text-sm font-semibold transition shadow-card">Zaxiraga qo'shish</button>
                     </div>
                 </div>
             </div>
@@ -214,10 +285,10 @@
 
 
     <div id="archiveModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div onclick="closeArchiveModal()" class="absolute inset-0 bg-gray-900/60"></div>
-        <div class="relative bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
-            <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div onclick="closeArchiveModal()" class="absolute inset-0 bg-tent-900/60"></div>
+        <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center border border-dune-200">
+            <div class="w-12 h-12 rounded-full bg-dune-100 flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-ink-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="4" width="18" height="5" rx="1"></rect>
                     <path d="M5 9v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9"></path>
                     <path d="M10 13h4"></path>
@@ -225,20 +296,20 @@
             </div>
             
             {% if product.active %}
-            <h3 class="text-lg font-bold text-gray-900">Ushbu mahsulot arxivlansinmi?</h3>
-            <p class="text-sm text-gray-500 mt-2">
-                <span class="font-medium text-gray-900">{{ product.name }}</span> mahsulotlar ro'yxati va kassadan yashiriladi, ammo uning tarixi va zaxirasi saqlanib qoladi. Keyinroq arxivdan qaytarishingiz mumkin.
+            <h3 class="text-lg font-bold text-ink-900">Ushbu mahsulot arxivlansinmi?</h3>
+            <p class="text-sm text-ink-500 mt-2">
+                <span class="font-medium text-ink-900">{{ product.name }}</span> mahsulotlar ro'yxati va kassadan yashiriladi, ammo uning tarixi va zaxirasi saqlanib qoladi. Keyinroq arxivdan qaytarishingiz mumkin.
             </p>
 
             <div class="flex gap-3 mt-6">
-                <button type="button" onclick="closeArchiveModal()" class="flex-1 py-2.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-sm font-medium text-gray-700 transition">Bekor qilish</button>
-                <a href="{% url 'archive_product' product.id %}" class="flex-1 flex items-center justify-center py-2.5 rounded-lg bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium transition shadow-sm">Arxivlash</a>
+                <button type="button" onclick="closeArchiveModal()" class="flex-1 py-2.5 rounded-lg border border-dune-200 bg-white hover:bg-dune-100 text-sm font-medium text-ink-700 transition">Bekor qilish</button>
+                <a href="{% url 'archive_product' product.id %}" class="flex-1 flex items-center justify-center py-2.5 rounded-lg bg-tent-900 hover:bg-tent-800 text-white text-sm font-semibold transition shadow-card">Arxivlash</a>
             </div>
             {% else %}
-            <h3 class="text-lg font-bold text-gray-900">Ushbu mahsulot arxivdan chiqarilsinmi?</h3>
+            <h3 class="text-lg font-bold text-ink-900">Ushbu mahsulot arxivdan chiqarilsinmi?</h3>
             <div class="flex gap-3 mt-6">
-                <button type="button" onclick="closeArchiveModal()" class="flex-1 py-2.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-sm font-medium text-gray-700 transition">Bekor qilish</button>
-                <a href="{% url 'unarchive_product' product.id %}" class="flex-1 flex items-center justify-center py-2.5 rounded-lg bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium transition shadow-sm">Arxivdan chiqarish</a>
+                <button type="button" onclick="closeArchiveModal()" class="flex-1 py-2.5 rounded-lg border border-dune-200 bg-white hover:bg-dune-100 text-sm font-medium text-ink-700 transition">Bekor qilish</button>
+                <a href="{% url 'unarchive_product' product.id %}" class="flex-1 flex items-center justify-center py-2.5 rounded-lg bg-tent-900 hover:bg-tent-800 text-white text-sm font-semibold transition shadow-card">Arxivdan chiqarish</a>
             </div>
             {% endif %}
         </div>
@@ -287,13 +358,13 @@
 
         const list = document.getElementById('stockActivityList');
         const row = document.createElement('div');
-        row.className = 'px-5 py-3 flex items-center justify-between hover:bg-gray-50 transition';
+        row.className = 'px-5 py-3 flex items-center justify-between hover:bg-dune-50 transition';
         row.innerHTML = `
             <div>
-                <p class="text-sm font-medium text-gray-900">Zaxira qabul qilindi</p>
-                <p class="text-xs text-gray-500 mt-0.5">Qo'lda o'zgartirish · Hozirgina</p>
+                <p class="text-sm font-medium text-ink-900">Zaxira qabul qilindi</p>
+                <p class="text-xs text-ink-500 mt-0.5">Qo'lda o'zgartirish · Hozirgina</p>
             </div>
-            <span class="font-mono text-sm font-bold text-blue-600">+${fmt0(qty)}</span>
+            <span class="font-mono text-sm font-bold text-copper-600">+${fmt0(qty)}</span>
         `;
         
         // Remove empty state if it exists

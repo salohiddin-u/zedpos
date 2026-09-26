@@ -441,6 +441,7 @@ def supplier_detail(request, supplier_id):
         "supplier_total_paid": supplier_total_paid,
         "supplier_month_total_paid": supplier_month_total_paid,
         "supplier_payments": supplier_payments,
+        "suppliers": Supplier.objects.all(),
     }
     return render(request, "suppliers.html", context)
 

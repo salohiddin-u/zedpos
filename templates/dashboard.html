@@ -9,11 +9,11 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" href="{% static 'icons/icon.png' %}" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="{% url 'manifest' %}">
-    <meta name="theme-color" content="#111827">
+    <meta name="theme-color" content="#211A14">
 
     <script>
     if ('serviceWorker' in navigator) {
@@ -21,219 +21,291 @@
     }
     </script>
 
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Manrope', 'sans-serif'] },
+                    colors: {
+                        /* Karavan — desert / caravan palette. Warm sand, deep tent-charcoal,
+                           copper as the single accent, sage + rust used sparingly for signal. */
+                        dune:    { 50: '#FAF7F1', 100: '#F3ECDF', 200: '#E6D9C1', 300: '#D3BE97' },
+                        tent:    { 900: '#1E1812', 800: '#241D16', 700: '#2E251C' },
+                        ink:     { 900: '#241C14', 700: '#4A4034', 500: '#8A7D6C', 400: '#A69A87' },
+                        copper:  { 400: '#DE9A56', 500: '#C1692F', 600: '#A6551F', 700: '#8A4419' },
+                        sage:    { 500: '#6E8F6C', 50: '#EEF3ED' },
+                        rust:    { 500: '#B85C45', 50: '#FBEFEA' },
+                    },
+                    boxShadow: {
+                        card: '0 1px 2px rgba(36, 28, 20, 0.04), 0 8px 24px -8px rgba(36, 28, 20, 0.08)',
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .hbar { transition: height 0.4s ease; }
+        body { font-family: 'Manrope', sans-serif; }
+        .hbar { transition: height 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 999px; }
-        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        ::-webkit-scrollbar-thumb { background: #D3BE97; border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #C1692F; }
+        .nav-active { position: relative; }
+        .nav-active::before {
+            content: '';
+            position: absolute;
+            left: -16px; top: 6px; bottom: 6px;
+            width: 3px;
+            border-radius: 999px;
+            background: #DE9A56;
+        }
     </style>
 </head>
 
-<body class="bg-gray-50 text-gray-900 antialiased h-screen flex flex-col md:flex-row overflow-hidden">
+<body class="bg-dune-50 text-ink-900 antialiased h-screen flex flex-col md:flex-row overflow-hidden">
 
-    <!-- MOBIL UCHUN TEPADAGI HEADER (GAMBURGER TUGMASI BILAN) -->
-    <div class="md:hidden bg-gray-900 text-white px-4 py-3 flex items-center justify-between shrink-0 border-b border-gray-800">
+    <!-- MOBIL UCHUN TEPADAGI HEADER -->
+    <div class="md:hidden bg-tent-900 text-dune-50 px-4 py-3 flex items-center justify-between shrink-0 border-b border-white/10">
         <div class="flex items-center gap-3">
-            <button type="button" onclick="toggleSidebar()" aria-label="Open Menu" class="p-2 text-gray-200 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <button type="button" onclick="toggleSidebar()" aria-label="Open Menu" class="p-2 text-dune-200 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-copper-400 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
             </button>
-            <div>
-                <h2 class="text-base font-bold tracking-wider leading-none">KARAVAN</h2>
-                <p class="text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-0.5">Market</p>
+            <div class="flex items-center gap-2">
+                <img src="{% static 'icons/icon.png' %}" alt="" class="w-7 h-7 rounded-md">
+                <div>
+                    <h2 class="text-sm font-bold tracking-tight leading-none">Karavan</h2>
+                    <p class="text-[10px] text-copper-400 leading-none mt-1">Market</p>
+                </div>
             </div>
         </div>
-        <span class="text-xs font-semibold text-gray-300 bg-gray-800 px-3 py-1 rounded-full">Boshqaruv paneli</span>
+        <span class="text-[11px] font-medium text-dune-200 bg-white/5 px-3 py-1 rounded-full border border-white/10">Boshqaruv paneli</span>
     </div>
 
-    <!-- MOBIL MENYU FONINI QORAYTIRISH (OVERLAY) -->
-    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-gray-900/60 z-40 hidden backdrop-blur-sm transition-opacity md:hidden"></div>
+    <!-- MOBIL MENYU FONI -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-tent-900/70 z-40 hidden backdrop-blur-sm transition-opacity md:hidden"></div>
 
     <!-- YON MENYU (SIDEBAR) -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white flex flex-col shrink-0 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
-        <div class="p-5 flex justify-between items-center border-b border-gray-800 md:border-b-0">
-            <div>
-                <h2 class="text-xl font-bold tracking-wider">KARAVAN</h2>
-                <p class="text-xs text-gray-400 uppercase tracking-widest">Market</p>
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-tent-900 text-dune-100 flex flex-col shrink-0 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
+        <div class="p-5 flex justify-between items-center border-b border-white/[0.06] md:border-b-0">
+            <div class="flex items-center gap-2.5">
+                <img src="{% static 'icons/icon.png' %}" alt="Karavan" class="w-9 h-9 rounded-lg shadow-card">
+                <div>
+                    <h2 class="text-lg font-bold tracking-tight leading-none text-white">Karavan</h2>
+                    <p class="text-[10px] text-copper-400 font-medium tracking-[0.2em] leading-none mt-1.5">MARKET</p>
+                </div>
             </div>
-            <button type="button" onclick="toggleSidebar()" class="md:hidden p-2 text-gray-400 hover:text-white rounded-lg">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <button type="button" onclick="toggleSidebar()" class="md:hidden p-2 text-dune-300 hover:text-white rounded-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
             </button>
         </div>
 
-        <nav class="flex flex-col px-4 py-4 gap-1.5 overflow-y-auto">
-            <a href="{% url 'dashboard' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white transition">Boshqaruv paneli</a>
-            <a href="{% url 'pos' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Kassa</a>
-            <a href="{% url 'products' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Mahsulotlar</a>
-            <a href="{% url 'supplier_payments' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Ta'minotchi</a>
-            <a href="{% url 'personal_expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Xarajatlar</a>
+        <nav class="flex flex-col px-4 md:px-6 py-4 gap-0.5 overflow-y-auto mt-1">
+            <p class="px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-dune-300/50 mb-2 mt-1">Boshqarish</p>
+
+            <a href="{% url 'dashboard' %}" class="nav-active flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold bg-white/[0.06] text-white transition">
+                <svg class="w-[18px] h-[18px] shrink-0 text-copper-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                Boshqaruv paneli
+            </a>
+            <a href="{% url 'pos' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M5 6h14a1 1 0 011 1v11a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1zm3 8h4"></path>
+                </svg>
+                Kassa
+            </a>
+            <a href="{% url 'products' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+                Mahsulotlar
+            </a>
+            <a href="{% url 'supplier_payments' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5V9a1 1 0 011-1h9l4 4v4.5a1 1 0 01-1 1H4a1 1 0 01-1-1z"></path>
+                    <circle cx="7.5" cy="17.5" r="1.5" stroke-width="1.8"></circle>
+                    <circle cx="16.5" cy="17.5" r="1.5" stroke-width="1.8"></circle>
+                </svg>
+                Ta'minotchi
+            </a>
+            <a href="{% url 'personal_expenses' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 3h9l3 3v15a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1zm9 0v3h3M8 12h8M8 16h5"></path>
+                </svg>
+                Xarajatlar
+            </a>
         </nav>
+
+        <div class="mt-auto p-5 hidden md:block">
+            <div class="rounded-xl bg-white/[0.04] border border-white/[0.07] p-3.5">
+                <p class="text-[11px] text-dune-300/60 leading-relaxed">Karta ma'lumotlari sizning mahalliy vaqtingiz bo'yicha yangilanadi.</p>
+            </div>
+        </div>
     </aside>
 
-    <!-- ASOSIY SHABLON QISMI -->
+    <!-- ASOSIY QISM -->
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         <!-- PAGE HEADER -->
-        <header class="bg-white border-b border-gray-200 p-4 md:p-6 shrink-0 flex items-center justify-between gap-4">
+        <header class="hidden md:flex bg-dune-50/90 backdrop-blur border-b border-dune-200 p-4 md:px-8 md:py-6 shrink-0 items-center justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Boshqaruv paneli</h1>
-                <p id="todayDate" class="text-sm text-gray-500 mt-0.5 capitalize"></p>
+                <h1 class="text-2xl font-bold text-ink-900 tracking-tight">Boshqaruv paneli</h1>
+                <p id="todayDate" class="text-sm text-ink-500 mt-0.5 capitalize"></p>
             </div>
-            <span id="clock" class="font-mono text-sm text-gray-600 bg-gray-100 px-3 py-1.5 rounded-lg hidden sm:block border border-gray-200"></span>
+            <span id="clock" class="font-mono text-sm text-ink-700 bg-white px-3.5 py-1.5 rounded-lg hidden sm:block border border-dune-200 shadow-card"></span>
         </header>
 
         <!-- SCROLLABLE CONTENT -->
-        <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+        <div class="flex-1 overflow-y-auto overflow-x-hidden p-4 md:px-8 md:py-6 space-y-7">
 
             <!-- Z-REPORT (X-HISOBOT) STRIP -->
-            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                <div class="px-5 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between flex-wrap gap-2">
-                    <p class="text-xs font-bold uppercase tracking-wider text-gray-500">Bugun · X-Hisobot</p>
-                    <p class="text-xs font-mono text-gray-400">{{localtime}} holatiga ko'ra</p>
+            <div class="bg-white border border-dune-200 rounded-2xl shadow-card overflow-hidden">
+                <div class="px-5 md:px-6 py-3.5 bg-dune-100/50 border-b border-dune-200 flex items-center justify-between flex-wrap gap-2">
+                    <p class="text-[13px] font-semibold text-ink-700">Bugun · X-Hisobot</p>
+                    <p class="text-xs font-mono text-ink-400">{{localtime}} holatiga ko'ra</p>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-200">
-                    <div class="p-5">
-                        <p class="text-xs uppercase tracking-wider text-gray-500 font-medium">Umumiy savdo</p>
-                        <p class="font-bold text-2xl text-gray-900 mt-1">{{today_total_sales | intcomma}} so'm</p>
-                        <p class="text-xs font-medium {% if today_sales_change_pct >= 0 %}text-emerald-600{% else %}text-red-500{% endif %} mt-1">
-                            {% if today_sales_change_pct >= 0 %}▲{% else %}▼{% endif %} {{today_sales_change_pct | floatformat}}% kecha {{ localtime.time }} ga nisbatan
-                        </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-dune-200/70">
+                    <div class="p-5 md:p-6">
+                        <p class="text-xs text-ink-500 font-medium">Umumiy savdo</p>
+                        <p class="font-bold text-2xl text-ink-900 mt-1.5 tracking-tight">{{today_total_sales | intcomma}} so'm</p>
+                        <span class="inline-flex items-center gap-1 text-xs font-semibold mt-2 px-2 py-0.5 rounded-full {% if today_sales_change_pct >= 0 %}bg-sage-50 text-sage-500{% else %}bg-rust-50 text-rust-500{% endif %}">
+                            {% if today_sales_change_pct >= 0 %}▲{% else %}▼{% endif %} {{today_sales_change_pct | floatformat}}%
+                            <span class="font-normal opacity-70">· kecha {{ localtime.time }}</span>
+                        </span>
                     </div>
-                    <div class="p-5">
-                        <p class="text-xs uppercase tracking-wider text-gray-500 font-medium">Foyda</p>
-                        <p class="font-bold text-2xl text-gray-900 mt-1">{{today_total_profit|floatformat:0}} so'm</p>
+                    <div class="p-5 md:p-6">
+                        <p class="text-xs text-ink-500 font-medium">Foyda</p>
+                        <p class="font-bold text-2xl text-ink-900 mt-1.5 tracking-tight">{{today_total_profit|floatformat:0}} so'm</p>
                     </div>
-                    <div class="p-5">
-                        <p class="text-xs uppercase tracking-wider text-gray-500 font-medium">Ta'minotchi</p>
-                        <p class="font-bold text-2xl text-red-600 mt-1">{{ today_total_supplier_payments }} so'm</p>
+                    <div class="p-5 md:p-6">
+                        <p class="text-xs text-ink-500 font-medium">Ta'minotchi</p>
+                        <p class="font-bold text-2xl text-rust-500 mt-1.5 tracking-tight">{{ today_total_supplier_payments }} so'm</p>
                     </div>
-                    <div class="p-5">
-                        <p class="text-xs uppercase tracking-wider text-gray-500 font-medium">Mahsulotlar sotish narxi</p>
-                        <p class="font-bold text-2xl text-gray-900 mt-1">{{ active_products_vendor_cost|floatformat:0 }} so'm</p>
-                        <p class="text-xs text-gray-400 mt-1">
-                            Tannarx: {{ active_products_sales_value|floatformat:0 }} so'm
-                        </p>
+                    <div class="p-5 md:p-6">
+                        <p class="text-xs text-ink-500 font-medium">Mahsulotlar sotish narxi</p>
+                        <p class="font-bold text-2xl text-ink-900 mt-1.5 tracking-tight">{{ active_products_vendor_cost|floatformat:0 }} so'm</p>
+                        <p class="text-xs text-ink-400 mt-1.5">Tannarx: {{ active_products_sales_value|floatformat:0 }} so'm</p>
                     </div>
                 </div>
             </div>
 
             <!-- PERIOD REPORTS -->
             <div>
-                <p class="text-xs uppercase tracking-wider text-gray-500 font-bold mb-3 px-1">Hisobotlar</p>
+                <p class="text-[13px] font-semibold text-ink-700 mb-3 px-1">Hisobotlar</p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
 
                     <!-- Kecha -->
-                    <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                    <div class="bg-white border border-dune-200 rounded-2xl p-5 shadow-card flex flex-col justify-between hover:border-copper-400/50 transition">
                         <div>
                             <div class="flex items-center justify-between mb-3">
-                                <p class="text-sm font-bold text-gray-900">Kecha</p>
-                                <span class="text-[10px] font-mono uppercase tracking-wider text-gray-500 bg-gray-100 border border-gray-200 rounded-full px-2 py-0.5">Yopilgan</span>
+                                <p class="text-sm font-bold text-ink-900">Kecha</p>
+                                <span class="text-[10px] font-medium text-ink-500 bg-dune-100 rounded-full px-2.5 py-1">Yopilgan</span>
                             </div>
-                            <p class="text-xs uppercase tracking-wider text-gray-400 font-medium">Savdo</p>
-                            <p class="text-xl font-bold text-emerald-600 mt-0.5">{{ yesterday_total_sales }} so'm</p>
+                            <p class="text-xs text-ink-500 font-medium">Savdo</p>
+                            <p class="text-xl font-bold text-sage-500 mt-1">{{ yesterday_total_sales }} so'm</p>
                         </div>
-                        <div class="border-t border-gray-100 my-4"></div>
+                        <div class="border-t border-dune-100 my-4"></div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Foyda</p>
-                                <p class="text-sm font-semibold text-gray-900 mt-0.5">{{ yesterday_total_profit|floatformat:0 }} so'm</p>
+                                <p class="text-[11px] text-ink-400 font-medium">Foyda</p>
+                                <p class="text-sm font-semibold text-ink-900 mt-0.5">{{ yesterday_total_profit|floatformat:0 }} so'm</p>
                             </div>
                             <div>
-                                <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Ta'minotchi</p>
-                                <p class="text-sm font-semibold text-red-500 mt-0.5">{{ yesterday_total_supplier_payments|floatformat:0 }} so'm</p>
+                                <p class="text-[11px] text-ink-400 font-medium">Ta'minotchi</p>
+                                <p class="text-sm font-semibold text-rust-500 mt-0.5">{{ yesterday_total_supplier_payments|floatformat:0 }} so'm</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- 7 kun -->
-                    <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                    <div class="bg-white border border-dune-200 rounded-2xl p-5 shadow-card flex flex-col justify-between hover:border-copper-400/50 transition">
                         <div>
                             <div class="flex items-center justify-between mb-3">
-                                <p class="text-sm font-bold text-gray-900">7 kun</p>
-                                <span class="text-[10px] font-mono uppercase tracking-wider text-gray-500 bg-gray-100 border border-gray-200 rounded-full px-2 py-0.5">Haftalik</span>
+                                <p class="text-sm font-bold text-ink-900">7 kun</p>
+                                <span class="text-[10px] font-medium text-ink-500 bg-dune-100 rounded-full px-2.5 py-1">Haftalik</span>
                             </div>
-                            <p class="text-xs uppercase tracking-wider text-gray-400 font-medium">Savdo</p>
-                            <p class="text-xl font-bold text-emerald-600 mt-0.5">{{ week_total_sales }} so'm</p>
+                            <p class="text-xs text-ink-500 font-medium">Savdo</p>
+                            <p class="text-xl font-bold text-sage-500 mt-1">{{ week_total_sales }} so'm</p>
                         </div>
-                        <div class="border-t border-gray-100 my-4"></div>
+                        <div class="border-t border-dune-100 my-4"></div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Foyda</p>
-                                <p class="text-sm font-semibold text-gray-900 mt-0.5">{{ week_total_profit|floatformat:0 }} so'm</p>
+                                <p class="text-[11px] text-ink-400 font-medium">Foyda</p>
+                                <p class="text-sm font-semibold text-ink-900 mt-0.5">{{ week_total_profit|floatformat:0 }} so'm</p>
                             </div>
                             <div>
-                                <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Ta'minotchi</p>
-                                <p class="text-sm font-semibold text-red-500 mt-0.5">{{ week_total_supplier_payments|floatformat:0 }} so'm</p>
+                                <p class="text-[11px] text-ink-400 font-medium">Ta'minotchi</p>
+                                <p class="text-sm font-semibold text-rust-500 mt-0.5">{{ week_total_supplier_payments|floatformat:0 }} so'm</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Oylik -->
-                    <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                    <div class="bg-white border border-dune-200 rounded-2xl p-5 shadow-card flex flex-col justify-between hover:border-copper-400/50 transition">
                         <div>
                             <div class="flex items-center justify-between mb-3">
-                                <p class="text-sm font-bold text-gray-900">Oylik</p>
+                                <p class="text-sm font-bold text-ink-900">Oylik</p>
                                 <div class="flex items-center justify-end gap-1">
-                                    <a href="{% url 'dashboard' %}?month={{ prev_month_param }}" class="w-6 h-6 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition" aria-label="Oldingi oy">‹</a>
-                                    <span class="text-[10px] font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5 truncate max-w-[80px] text-center">{{ month_name }}</span>
+                                    <a href="{% url 'dashboard' %}?month={{ prev_month_param }}" class="w-6 h-6 rounded-full flex items-center justify-center text-ink-500 hover:text-ink-900 hover:bg-dune-100 transition" aria-label="Oldingi oy">‹</a>
+                                    <span class="text-[10px] font-semibold text-copper-600 bg-copper-400/15 rounded-full px-2.5 py-1 truncate max-w-[80px] text-center">{{ month_name }}</span>
                                     {% if next_month_param %}
-                                    <a href="{% url 'dashboard' %}?month={{ next_month_param }}" class="w-6 h-6 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition" aria-label="Keyingi oy">›</a>
+                                    <a href="{% url 'dashboard' %}?month={{ next_month_param }}" class="w-6 h-6 rounded-full flex items-center justify-center text-ink-500 hover:text-ink-900 hover:bg-dune-100 transition" aria-label="Keyingi oy">›</a>
                                     {% else %}
-                                    <span class="w-6 h-6 rounded-full flex items-center justify-center text-gray-300 cursor-not-allowed">›</span>
+                                    <span class="w-6 h-6 rounded-full flex items-center justify-center text-ink-400/40 cursor-not-allowed">›</span>
                                     {% endif %}
                                 </div>
                             </div>
-                            <p class="text-xs uppercase tracking-wider text-gray-400 font-medium">Savdo</p>
-                            <p class="text-xl font-bold text-emerald-600 mt-0.5">{{ month_total_sales|floatformat:0 }} so'm</p>
+                            <p class="text-xs text-ink-500 font-medium">Savdo</p>
+                            <p class="text-xl font-bold text-sage-500 mt-1">{{ month_total_sales|floatformat:0 }} so'm</p>
                         </div>
-                        <div class="border-t border-gray-100 my-4"></div>
+                        <div class="border-t border-dune-100 my-4"></div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Foyda</p>
-                                <p class="text-sm font-semibold text-gray-900 mt-0.5">{{ month_total_profit|floatformat:0 }} so'm</p>
+                                <p class="text-[11px] text-ink-400 font-medium">Foyda</p>
+                                <p class="text-sm font-semibold text-ink-900 mt-0.5">{{ month_total_profit|floatformat:0 }} so'm</p>
                             </div>
                             <div>
-                                <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Ta'minotchi</p>
-                                <p class="text-sm font-semibold text-red-500 mt-0.5">{{ month_total_supplier_payments|floatformat:0 }} so'm</p>
+                                <p class="text-[11px] text-ink-400 font-medium">Ta'minotchi</p>
+                                <p class="text-sm font-semibold text-rust-500 mt-0.5">{{ month_total_supplier_payments|floatformat:0 }} so'm</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Custom Range -->
-                    <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                    <div class="bg-white border border-dune-200 rounded-2xl p-5 shadow-card flex flex-col justify-between hover:border-copper-400/50 transition">
                         <div>
                             <form method="GET" action="{% url 'dashboard' %}" class="space-y-2 mb-3">
                                 <div class="grid grid-cols-2 gap-2">
-                                    <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="text-xs p-1.5 rounded-lg border border-gray-300 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:outline-none w-full">
-                                    <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="text-xs p-1.5 rounded-lg border border-gray-300 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:outline-none w-full">
+                                    <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="text-xs p-1.5 rounded-lg border border-dune-200 bg-dune-50 focus:ring-2 focus:ring-copper-400 focus:border-copper-400 focus:outline-none w-full">
+                                    <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="text-xs p-1.5 rounded-lg border border-dune-200 bg-dune-50 focus:ring-2 focus:ring-copper-400 focus:border-copper-400 focus:outline-none w-full">
                                 </div>
-                                <button type="submit" class="w-full text-xs font-semibold py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition">Qo'llash</button>
+                                <button type="submit" class="w-full text-xs font-semibold py-1.5 rounded-lg bg-copper-500 hover:bg-copper-600 text-white transition">Qo'llash</button>
                             </form>
 
                             {% if custom_range_active %}
-                            <p class="text-xs uppercase tracking-wider text-gray-400 font-medium">Savdo</p>
-                            <p class="text-xl font-bold text-emerald-600 mt-0.5">{{ custom_range_total_sales|floatformat:0 }} so'm</p>
+                            <p class="text-xs text-ink-500 font-medium">Savdo</p>
+                            <p class="text-xl font-bold text-sage-500 mt-1">{{ custom_range_total_sales|floatformat:0 }} so'm</p>
                             {% else %}
-                            <p class="text-xs text-gray-400 mt-2">Sana oralig'ini tanlang va "Qo'llash" tugmasini bosing.</p>
+                            <p class="text-xs text-ink-400 mt-2 leading-relaxed">Sana oralig'ini tanlang va "Qo'llash" tugmasini bosing.</p>
                             {% endif %}
                         </div>
 
                         {% if custom_range_active %}
                         <div>
-                            <div class="border-t border-gray-100 my-3"></div>
+                            <div class="border-t border-dune-100 my-3"></div>
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
-                                    <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Foyda</p>
-                                    <p class="text-sm font-semibold text-gray-900 mt-0.5">{{ custom_range_total_profit|floatformat:0 }} so'm</p>
+                                    <p class="text-[11px] text-ink-400 font-medium">Foyda</p>
+                                    <p class="text-sm font-semibold text-ink-900 mt-0.5">{{ custom_range_total_profit|floatformat:0 }} so'm</p>
                                 </div>
                                 <div>
-                                    <p class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Ta'minotchi</p>
-                                    <p class="text-sm font-semibold text-red-500 mt-0.5">{{ custom_range_total_supplier_payments|floatformat:0 }} so'm</p>
+                                    <p class="text-[11px] text-ink-400 font-medium">Ta'minotchi</p>
+                                    <p class="text-sm font-semibold text-rust-500 mt-0.5">{{ custom_range_total_supplier_payments|floatformat:0 }} so'm</p>
                                 </div>
                             </div>
                         </div>
@@ -244,24 +316,24 @@
             </div>
 
             <!-- SALES BY HOUR & TOP SELLERS -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
                 <!-- Soatlik savdo -->
-                <div class="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-5 shadow-sm relative">
-                    <div class="flex items-baseline justify-between mb-4">
-                        <p class="text-sm font-bold text-gray-900">Soatlik savdo</p>
-                        <p id="chart-peak-info" class="text-xs font-mono text-gray-400">Eng yuqori -- · 0 so'm</p>
+                <div class="lg:col-span-2 bg-white border border-dune-200 rounded-2xl p-5 md:p-6 shadow-card relative">
+                    <div class="flex items-baseline justify-between mb-5">
+                        <p class="text-sm font-bold text-ink-900">Soatlik savdo</p>
+                        <p id="chart-peak-info" class="text-xs font-mono text-ink-400">Eng yuqori -- · 0 so'm</p>
                     </div>
 
-                    <div id="chart-bars-container" class="flex items-end gap-1.5 h-44 relative pt-4"></div>
+                    <div id="chart-bars-container" class="flex items-end gap-1 sm:gap-1.5 h-44 w-full min-w-0 relative pt-4 overflow-hidden"></div>
 
-                    <div id="chart-tooltip" class="absolute pointer-events-none opacity-0 bg-gray-900 text-white text-xs font-mono py-1 px-2.5 rounded shadow-lg transition-opacity duration-150 -translate-x-1/2 -translate-y-full z-20"></div>
+                    <div id="chart-tooltip" class="absolute pointer-events-none opacity-0 bg-tent-900 text-white text-xs font-mono py-1.5 px-3 rounded-lg shadow-lg transition-opacity duration-150 -translate-x-1/2 -translate-y-full z-20"></div>
                 </div>
 
                 <!-- Top Sellers -->
-                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                    <p class="text-sm font-bold text-gray-900 mb-4">Bugungi eng ko'p sotilganlar</p>
-                    <div id="top-sellers-container" class="space-y-3"></div>
+                <div class="bg-white border border-dune-200 rounded-2xl p-5 md:p-6 shadow-card">
+                    <p class="text-sm font-bold text-ink-900 mb-4">Bugungi eng ko'p sotilganlar</p>
+                    <div id="top-sellers-container" class="space-y-3.5"></div>
                 </div>
 
             </div>
@@ -336,20 +408,21 @@
         hourlyData.forEach(item => {
             const percentageHeight = maxVal > 0 ? (item.value / maxVal) * 100 : 0;
 
-            let brandColor = 'bg-blue-300';
-            if (percentageHeight === 100) brandColor = 'bg-blue-600';
-            else if (percentageHeight > 70) brandColor = 'bg-blue-500';
-            else if (percentageHeight > 30) brandColor = 'bg-blue-400';
+            // Copper gradient scale — deeper and more saturated as the bar climbs.
+            let barStyle = 'background: linear-gradient(180deg, #F0DAB9 0%, #E2BC85 100%);';
+            if (percentageHeight === 100) barStyle = 'background: linear-gradient(180deg, #DE9A56 0%, #A6551F 100%);';
+            else if (percentageHeight > 70) barStyle = 'background: linear-gradient(180deg, #E3AD70 0%, #B96A2E 100%);';
+            else if (percentageHeight > 30) barStyle = 'background: linear-gradient(180deg, #EAC59B 0%, #D3A165 100%);';
 
             const axisLabel = String(item.hour24).padStart(2, '0');
 
             htmlContent += `
-                <div class="flex-1 h-full flex flex-col items-center justify-end gap-1.5 group">
-                    <div class="hbar w-full rounded-t ${brandColor} cursor-pointer transition-all hover:opacity-80"
-                         style="height: ${Math.max(percentageHeight, 4)}%"
+                <div class="flex-1 min-w-0 h-full flex flex-col items-center justify-end gap-1.5 group">
+                    <div class="hbar w-full rounded-t-md cursor-pointer transition-opacity hover:opacity-85"
+                         style="height: ${Math.max(percentageHeight, 4)}%; ${barStyle}"
                          data-value="${format24HourLabel(item.hour24)}: ${formatCurrency(item.value)}">
                     </div>
-                    <span class="text-[10px] font-mono text-gray-400">${axisLabel}</span>
+                    <span class="text-[9px] sm:text-[10px] font-mono text-ink-400 truncate">${axisLabel}</span>
                 </div>
             `;
         });
@@ -395,7 +468,7 @@
         if (!container) return;
 
         if (!sellersData || sellersData.length === 0) {
-            container.innerHTML = `<p class="text-xs text-gray-400">Bugun uchun savdo yozuvlari mavjud emas.</p>`;
+            container.innerHTML = `<p class="text-xs text-ink-400">Bugun uchun savdo yozuvlari mavjud emas.</p>`;
             return;
         }
 
@@ -412,15 +485,16 @@
         sellersData.forEach((item, index) => {
             const percentageWidth = maxVal > 0 ? (item.total / maxVal) * 100 : 0;
             const rankNumber = index + 1;
+            const rankBg = rankNumber === 1 ? 'bg-copper-500 text-white' : 'bg-dune-100 text-ink-500';
 
             htmlContent += `
                 <div class="flex items-center gap-2.5 text-xs">
-                    <span class="font-mono text-gray-400 w-4 font-semibold">${rankNumber}</span>
-                    <span class="text-gray-800 w-32 shrink-0 truncate font-medium" title="${item.name}">${item.name}</span>
-                    <div class="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
-                        <div class="h-full bg-gray-900 rounded-full transition-all duration-500" style="width: ${percentageWidth}%"></div>
+                    <span class="w-5 h-5 rounded-full flex items-center justify-center font-semibold text-[10px] shrink-0 ${rankBg}">${rankNumber}</span>
+                    <span class="text-ink-700 w-24 shrink-0 truncate font-medium" title="${item.name}">${item.name}</span>
+                    <div class="flex-1 h-2 rounded-full bg-dune-100 overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-500" style="width: ${percentageWidth}%; background: linear-gradient(90deg, #DE9A56, #A6551F);"></div>
                     </div>
-                    <span class="font-mono text-gray-600 text-right whitespace-nowrap">${formatCurrency(item.total)}</span>
+                    <span class="font-mono text-ink-500 text-right whitespace-nowrap">${formatCurrency(item.total)}</span>
                 </div>
             `;
         });
