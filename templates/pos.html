@@ -75,9 +75,10 @@
         .product-card:active { transform: scale(0.98); }
 
         #toast { transition: transform 0.35s ease, opacity 0.35s ease; }
-        #toast[data-show="false"] { transform: translateY(16px); opacity: 0; pointer-events: none; }
+        /* Change 16px to -16px here so it slides down from the top */
+        #toast[data-show="false"] { transform: translateY(-16px); opacity: 0; pointer-events: none; }
         #toast[data-show="true"]  { transform: translateY(0);    opacity: 1; }
-        #toast[data-variant="error"] { background-color: #B85C45; } /* rust-500 */
+        #toast[data-variant="error"] { background-color: #cb311d; } /* rust-500 */
 
         .nav-active { position: relative; }
         .nav-active::before {
@@ -296,9 +297,9 @@
         </form>
     </div>
 
-    <div id="toast" data-show="false" class="fixed bottom-6 right-6 bg-tent-900 text-white px-5 py-3.5 rounded-xl shadow-lg z-50">
-        <span id="toastText" class="text-sm font-medium"></span>
-    </div>
+    <div id="toast" data-show="false" class="fixed top-6 left-6 md:left-[17rem] bg-tent-900 text-white px-5 py-3.5 rounded-xl shadow-lg z-50">
+    <span id="toastText" class="text-sm font-medium"></span>
+</div>
 
     <div id="weightModal" data-show="false" class="fixed inset-0 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
         <div onclick="closeWeightModal()" class="absolute inset-0 bg-tent-900/60 "></div>
