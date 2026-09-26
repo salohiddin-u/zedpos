@@ -9,13 +9,13 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="{% url 'manifest' %}">
     <link rel="icon" href="{% static 'icons/icon.png' %}" type="image/x-icon">
 
-    <meta name="theme-color" content="#111827">
+    <meta name="theme-color" content="#1E1812">
 
     <script>
     if ('serviceWorker' in navigator) {
@@ -23,11 +23,32 @@
     }
     </script>
 
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Manrope', 'sans-serif'] },
+                    colors: {
+                        dune:    { 50: '#FAF7F1', 100: '#F3ECDF', 200: '#E6D9C1', 300: '#D3BE97' },
+                        tent:    { 900: '#1E1812', 800: '#241D16', 700: '#2E251C' },
+                        ink:     { 900: '#241C14', 700: '#4A4034', 500: '#8A7D6C', 400: '#A69A87' },
+                        copper:  { 400: '#DE9A56', 500: '#C1692F', 600: '#A6551F', 700: '#8A4419' },
+                        sage:    { 500: '#6E8F6C', 50: '#EEF3ED' },
+                        rust:    { 500: '#B85C45', 50: '#FBEFEA' },
+                    },
+                    boxShadow: {
+                        card: '0 1px 2px rgba(36, 28, 20, 0.04), 0 8px 24px -8px rgba(36, 28, 20, 0.08)',
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
-        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+        body { font-family: 'Manrope', sans-serif; -webkit-font-smoothing: antialiased; }
         .font-mono { font-family: 'IBM Plex Mono', monospace; }
-        
-        /* Torn-ticket edge, colored to match the gray-100 column behind the ticket */
+
+        /* Torn-ticket edge, colored to match the dune-100 column behind the ticket */
         .ticket-notch { position: relative; }
         .ticket-notch::before,
         .ticket-notch::after {
@@ -36,19 +57,19 @@
             left: 0; right: 0;
             height: 11px;
             background:
-                linear-gradient(-45deg, #f3f4f6 8px, transparent 0) 0 0/16px 16px,
-                linear-gradient(45deg, #f3f4f6 8px, transparent 0) 0 0/16px 16px;
+                linear-gradient(-45deg, #F3ECDF 8px, transparent 0) 0 0/16px 16px,
+                linear-gradient(45deg, #F3ECDF 8px, transparent 0) 0 0/16px 16px;
             background-repeat: repeat-x;
         }
         .ticket-notch::before { top: -1px; }
         .ticket-notch::after  { bottom: -1px; transform: scaleY(-1); }
 
-        .dash-divider { border-top: 2px dashed #e5e7eb; } /* gray-200 */
+        .dash-divider { border-top: 2px dashed #E6D9C1; } /* dune-200 */
 
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 999px; } /* gray-300 */
-        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; } /* gray-400 */
+        ::-webkit-scrollbar-thumb { background: #D3BE97; border-radius: 999px; } /* dune-300 */
+        ::-webkit-scrollbar-thumb:hover { background: #C1692F; } /* copper-500 */
 
         .qty-btn:active { transform: scale(0.92); }
         .product-card:active { transform: scale(0.98); }
@@ -56,7 +77,17 @@
         #toast { transition: transform 0.35s ease, opacity 0.35s ease; }
         #toast[data-show="false"] { transform: translateY(16px); opacity: 0; pointer-events: none; }
         #toast[data-show="true"]  { transform: translateY(0);    opacity: 1; }
-        #toast[data-variant="error"] { background-color: #ef4444; } /* red-500 */
+        #toast[data-variant="error"] { background-color: #B85C45; } /* rust-500 */
+
+        .nav-active { position: relative; }
+        .nav-active::before {
+            content: '';
+            position: absolute;
+            left: -16px; top: 6px; bottom: 6px;
+            width: 3px;
+            border-radius: 999px;
+            background: #DE9A56;
+        }
 
         @media (prefers-reduced-motion: reduce) {
             * { transition: none !important; animation: none !important; }
@@ -64,71 +95,105 @@
     </style>
 </head>
 
-<body class="bg-gray-50 text-gray-900 h-screen flex flex-col md:flex-row overflow-hidden">
+<body class="bg-dune-50 text-ink-900 h-screen flex flex-col md:flex-row overflow-hidden">
 
-    <div class="md:hidden bg-gray-900 text-white px-4 py-3 flex items-center justify-between shrink-0 border-b border-gray-800">
+    <div class="md:hidden bg-tent-900 text-dune-50 px-4 py-3 flex items-center justify-between shrink-0 border-b border-white/10">
         <div class="flex items-center gap-3">
-            <button type="button" onclick="toggleSidebar()" aria-label="Open Menu" class="p-2 text-gray-200 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <button type="button" onclick="toggleSidebar()" aria-label="Open Menu" class="p-2 text-dune-200 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-copper-400 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
             </button>
-            <div>
-                <h2 class="text-base font-bold tracking-wider leading-none">KARAVAN</h2>
-                <p class="text-[10px] text-gray-400 uppercase tracking-widest leading-none mt-0.5">Market</p>
+            <div class="flex items-center gap-2">
+                <img src="{% static 'icons/icon.png' %}" alt="" class="w-7 h-7 rounded-md">
+                <div>
+                    <h2 class="text-sm font-bold tracking-tight leading-none">Karavan</h2>
+                    <p class="text-[10px] text-copper-400 leading-none mt-1">Market</p>
+                </div>
             </div>
         </div>
-        <span class="text-xs font-semibold text-gray-300 bg-gray-800 px-3 py-1 rounded-full">Kassa</span>
+        <span class="text-[11px] font-medium text-dune-200 bg-white/5 px-3 py-1 rounded-full border border-white/10">Kassa</span>
     </div>
 
-    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-gray-900/60 z-40 hidden backdrop-blur-sm transition-opacity md:hidden"></div>
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-tent-900/70 z-40 hidden backdrop-blur-sm transition-opacity md:hidden"></div>
 
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white flex flex-col shrink-0 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
-        <div class="p-5 flex justify-between items-center border-b border-gray-800 md:border-b-0">
-            <div>
-                <h2 class="text-xl font-bold tracking-wider">KARAVAN</h2>
-                <p class="text-xs text-gray-400 uppercase tracking-widest">Market</p>
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-tent-900 text-dune-100 flex flex-col shrink-0 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
+        <div class="p-5 flex justify-between items-center border-b border-white/[0.06] md:border-b-0">
+            <div class="flex items-center gap-2.5">
+                <img src="{% static 'icons/icon.png' %}" alt="Karavan" class="w-9 h-9 rounded-lg shadow-card">
+                <div>
+                    <h2 class="text-lg font-bold tracking-tight leading-none text-white">Karavan</h2>
+                    <p class="text-[10px] text-copper-400 font-medium tracking-[0.2em] leading-none mt-1.5">MARKET</p>
+                </div>
             </div>
-            <button type="button" onclick="toggleSidebar()" class="md:hidden p-2 text-gray-400 hover:text-white rounded-lg">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <button type="button" onclick="toggleSidebar()" class="md:hidden p-2 text-dune-300 hover:text-white rounded-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
             </button>
         </div>
-        
-        <nav class="flex flex-col px-4 py-4 gap-1.5 overflow-y-auto">
-            <a href="{% url 'dashboard' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Boshqaruv paneli</a>
-            <a href="{% url 'pos' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white transition">Kassa</a>
-            <a href="{% url 'products' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Mahsulotlar</a>
-            <a href="{% url 'supplier_payments' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Ta'minotchi</a>
-            <a href="{% url 'personal_expenses' %}" class="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">Xarajatlar</a>
 
+        <nav class="flex flex-col px-4 md:px-6 py-4 gap-0.5 overflow-y-auto mt-1">
+            <p class="px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-dune-300/50 mb-2 mt-1">Boshqarish</p>
+
+            <a href="{% url 'dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                Boshqaruv paneli
+            </a>
+            <a href="{% url 'pos' %}" class="nav-active flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold bg-white/[0.06] text-white transition">
+                <svg class="w-[18px] h-[18px] shrink-0 text-copper-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M5 6h14a1 1 0 011 1v11a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1zm3 8h4"></path>
+                </svg>
+                Kassa
+            </a>
+            <a href="{% url 'products' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+                Mahsulotlar
+            </a>
+            <a href="{% url 'supplier_payments' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5V9a1 1 0 011-1h9l4 4v4.5a1 1 0 01-1 1H4a1 1 0 01-1-1z"></path>
+                    <circle cx="7.5" cy="17.5" r="1.5" stroke-width="1.8"></circle>
+                    <circle cx="16.5" cy="17.5" r="1.5" stroke-width="1.8"></circle>
+                </svg>
+                Ta'minotchi
+            </a>
+            <a href="{% url 'personal_expenses' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 3h9l3 3v15a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1zm9 0v3h3M8 12h8M8 16h5"></path>
+                </svg>
+                Xarajatlar
+            </a>
         </nav>
     </aside>
 
     <div class="flex-1 flex flex-col lg:flex-row min-w-0 overflow-hidden">
 
         <div class="shrink-0 lg:flex-1 flex flex-col min-w-0 overflow-hidden">
-            
-            <header class="p-4 md:p-6 shrink-0 bg-white border-b border-gray-200">
-                <div class="flex items-start justify-between gap-6 flex-wrap">
+
+            <header class="p-4 md:p-6 shrink-0 bg-white border-b border-dune-200">
+                <div class="hidden md:flex items-start justify-between gap-6 flex-wrap mb-4">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900 leading-tight">Kassa</h1>
-                        <p id="todayDate" class="text-sm text-gray-500 mt-1"></p>
+                        <h1 class="text-2xl font-bold text-ink-900 leading-tight tracking-tight">Kassa</h1>
+                        <p id="todayDate" class="text-sm text-ink-500 mt-1"></p>
                     </div>
-                    <span id="clock" class="font-mono text-sm text-gray-500 hidden sm:block bg-gray-100 px-3 py-1.5 rounded-lg"></span>
+                    <span id="clock" class="font-mono text-sm text-ink-700 hidden sm:block bg-dune-100 px-3 py-1.5 rounded-lg border border-dune-200"></span>
                 </div>
 
-                <div class="mt-4 max-w-xl">
+                <div class="max-w-xl">
                     <input id="searchInput" type="text" autofocus autocomplete="off"
                         placeholder="Shtrix-kodni skanerlang yoki nomini kiriting..."
-                        class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition placeholder:text-gray-400">
+                        class="w-full px-4 py-3 rounded-xl bg-dune-50 border border-dune-200 text-sm focus:outline-none focus:ring-2 focus:ring-copper-400 focus:border-copper-400 focus:bg-white transition placeholder:text-ink-400">
                 </div>
             </header>
 
-            <div id="productGrid" class="hidden lg:grid flex-1 overflow-y-auto p-4 md:p-6 grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 content-start bg-gray-50">
+            <div id="productGrid" class="hidden lg:grid flex-1 overflow-y-auto p-4 md:p-6 grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 content-start bg-dune-50">
 
-                <div id="noMatches" class="hidden col-span-full flex flex-col items-center justify-center text-center py-20 text-gray-400">
+                <div id="noMatches" class="hidden col-span-full flex flex-col items-center justify-center text-center py-20 text-ink-400">
                     <p class="text-sm font-medium">Mos mahsulot topilmadi</p>
                 </div>
 
@@ -143,21 +208,21 @@
     data-barcode="{{product.barcode}}"
     data-weight="1"
     onclick="openWeightModal(this.dataset.id, this.dataset.displayName, parseFloat(this.dataset.price), this.dataset.barcode)"
-    class="product-card cursor-pointer relative text-left bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-2 hover:border-blue-500 hover:shadow-md transition">
+    class="product-card cursor-pointer relative text-left bg-white border border-dune-200 rounded-xl p-4 flex flex-col gap-2 hover:border-copper-400 hover:shadow-card transition">
     
     <!-- PIN BUTTON START -->
-    <button type="button" onclick="pinProduct(event, '{{ product.id }}')" class="absolute top-2 right-2 text-gray-300 hover:text-blue-600 p-1 z-10 transition focus:outline-none" title="Qistirish">
+    <button type="button" onclick="pinProduct(event, '{{ product.id }}')" class="absolute top-2 right-2 text-dune-300 hover:text-copper-500 p-1 z-10 transition focus:outline-none" title="Qistirish">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
         </svg>
     </button>
     <!-- PIN BUTTON END -->
 
-    <span class="card-badge hidden absolute -top-2 -right-2 px-2 h-6 rounded-full text-[10px] bg-blue-600 text-white font-mono font-bold items-center justify-center shadow"></span>
-    <p class="text-sm font-semibold text-gray-900 leading-snug pr-6">{{product.name}}</p>
-    <p class="text-[11px] text-gray-400 font-mono">{{product.barcode}}</p>
-    <p class="stock-label text-[11px] {% if product.qty == 0 %}text-red-600{% else %}text-gray-500{% endif %} font-mono" data-unit="kg">Qoldiq: {{product.qty}} kg</p>
-    <p class="font-mono text-sm font-bold text-gray-900 mt-auto pt-1">{{ product.sales_price|unlocalize }} so'm/kg</p>
+    <span class="card-badge hidden absolute -top-2 -right-2 px-2 h-6 rounded-full text-[10px] bg-copper-500 text-white font-mono font-bold items-center justify-center shadow"></span>
+    <p class="text-sm font-semibold text-ink-900 leading-snug pr-6">{{product.name}}</p>
+    <p class="text-[11px] text-ink-400 font-mono">{{product.barcode}}</p>
+    <p class="stock-label text-[11px] {% if product.qty == 0 %}text-rust-500{% else %}text-ink-500{% endif %} font-mono" data-unit="kg">Qoldiq: {{product.qty}} kg</p>
+    <p class="font-mono text-sm font-bold text-ink-900 mt-auto pt-1">{{ product.sales_price|unlocalize }} so'm/kg</p>
 </div>
 {% else %}
 <div role="button" tabindex="0"
@@ -168,21 +233,21 @@
     data-qty="{{product.qty|unlocalize|default:0}}"
     data-barcode="{{product.barcode}}"
     onclick="addToCart(this.dataset.id, this.dataset.displayName, parseFloat(this.dataset.price), this.dataset.barcode)"
-    class="product-card cursor-pointer relative text-left bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-2 hover:border-blue-500 hover:shadow-md transition">
+    class="product-card cursor-pointer relative text-left bg-white border border-dune-200 rounded-xl p-4 flex flex-col gap-2 hover:border-copper-400 hover:shadow-card transition">
     
     <!-- PIN BUTTON START -->
-    <button type="button" onclick="pinProduct(event, '{{ product.id }}')" class="absolute top-2 right-2 p-1 z-10 transition focus:outline-none {% if product.pinned %}text-blue-600{% else %}text-gray-300 hover:text-blue-600{% endif %}" title="Qistirish">
+    <button type="button" onclick="pinProduct(event, '{{ product.id }}')" class="absolute top-2 right-2 p-1 z-10 transition focus:outline-none {% if product.pinned %}text-copper-500{% else %}text-dune-300 hover:text-copper-500{% endif %}" title="Qistirish">
     <svg class="w-5 h-5 {% if product.pinned %}fill-current{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
     </svg>
 </button>
     <!-- PIN BUTTON END -->
 
-    <span class="card-badge hidden absolute -top-2 -right-2 min-w-[1.5rem] h-6 px-1.5 rounded-full text-[11px] bg-blue-600 text-white font-mono font-bold items-center justify-center shadow"></span>
-    <p class="text-sm font-semibold text-gray-900 leading-snug pr-6">{{product.name}}</p>
-    <p class="text-[11px] text-gray-400 font-mono">{{product.barcode}}</p>
-    <p class="stock-label text-[11px] {% if product.qty == 0 %}text-red-600{% else %}text-gray-500{% endif %} font-mono" data-unit="unit">Qoldiq: {{product.qty | floatformat}}</p>
-    <p class="font-mono text-sm font-bold text-gray-900 mt-auto pt-1">{{ product.sales_price }} so'm</p>
+    <span class="card-badge hidden absolute -top-2 -right-2 min-w-[1.5rem] h-6 px-1.5 rounded-full text-[11px] bg-copper-500 text-white font-mono font-bold items-center justify-center shadow"></span>
+    <p class="text-sm font-semibold text-ink-900 leading-snug pr-6">{{product.name}}</p>
+    <p class="text-[11px] text-ink-400 font-mono">{{product.barcode}}</p>
+    <p class="stock-label text-[11px] {% if product.qty == 0 %}text-rust-500{% else %}text-ink-500{% endif %} font-mono" data-unit="unit">Qoldiq: {{product.qty | floatformat}}</p>
+    <p class="font-mono text-sm font-bold text-ink-900 mt-auto pt-1">{{ product.sales_price }} so'm</p>
 </div>
 {% endif %}
 {% endfor %}
@@ -190,17 +255,17 @@
             </div>
         </div>
 
-        <form id="saleForm" method="POST" action="{% url 'pos' %}" class="w-full lg:w-[26rem] flex-1 lg:flex-none flex flex-col border-t lg:border-t-0 lg:border-l border-gray-200 bg-gray-100 z-10">
+        <form id="saleForm" method="POST" action="{% url 'pos' %}" class="w-full lg:w-[26rem] flex-1 lg:flex-none flex flex-col border-t lg:border-t-0 lg:border-l border-dune-200 bg-dune-100 z-10">
             {% csrf_token %}
             <div class="flex-1 flex flex-col p-4 md:p-6 min-h-0">
-                <div class="flex-1 min-h-0 bg-white rounded-xl shadow-sm border border-gray-200 ticket-notch flex flex-col overflow-hidden">
+                <div class="flex-1 min-h-0 bg-white rounded-xl shadow-card border border-dune-200 ticket-notch flex flex-col overflow-hidden">
                     
                     <div class="px-5 pt-5 pb-3 shrink-0">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-0.5">Savdo</p>
+                                <p class="text-[10px] uppercase tracking-widest text-ink-400 font-bold mb-0.5">Savdo</p>
                             </div>
-                            <button type="button" onclick="clearOrder()" id="clearBtn" class="text-xs font-semibold text-red-500 hover:text-red-600 hidden bg-red-50 px-2.5 py-1.5 rounded-lg transition">Tozalash</button>
+                            <button type="button" onclick="clearOrder()" id="clearBtn" class="text-xs font-semibold text-rust-500 hover:text-rust-500/80 hidden bg-rust-50 px-2.5 py-1.5 rounded-lg transition">Tozalash</button>
                         </div>
                     </div>
 
@@ -212,17 +277,17 @@
 
                     <div class="dash-divider mx-5"></div>
 
-                    <div class="px-5 py-4 shrink-0 bg-gray-50/50">
+                    <div class="px-5 py-4 shrink-0 bg-dune-50/60">
                         <div class="flex justify-between items-baseline">
-                            <span class="text-sm font-bold text-gray-500 uppercase tracking-wider">Jami</span>
-                            <span id="totalAmt" class="font-mono text-2xl font-bold text-gray-900">0 so'm</span>
+                            <span class="text-sm font-bold text-ink-500 uppercase tracking-wider">Jami</span>
+                            <span id="totalAmt" class="font-mono text-2xl font-bold text-ink-900">0 so'm</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="shrink-0 pt-4">
                     <button type="button" id="chargeBtn" onclick="submitSale()"
-                        class="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                        class="w-full py-4 rounded-xl bg-copper-500 hover:bg-copper-600 text-white font-bold text-lg transition shadow-card disabled:opacity-50 disabled:cursor-not-allowed">
                         To'lov <span id="chargeAmt" class="ml-1 opacity-90 font-mono text-base font-medium">0 so'm</span>
                     </button>
                 </div>
@@ -231,40 +296,40 @@
         </form>
     </div>
 
-    <div id="toast" data-show="false" class="fixed bottom-6 right-6 bg-gray-900 text-white px-5 py-3.5 rounded-xl shadow-lg z-50">
+    <div id="toast" data-show="false" class="fixed bottom-6 right-6 bg-tent-900 text-white px-5 py-3.5 rounded-xl shadow-lg z-50">
         <span id="toastText" class="text-sm font-medium"></span>
     </div>
 
     <div id="weightModal" data-show="false" class="fixed inset-0 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
-        <div onclick="closeWeightModal()" class="absolute inset-0 bg-gray-900/60 "></div>
+        <div onclick="closeWeightModal()" class="absolute inset-0 bg-tent-900/60 "></div>
         <div class="relative bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden">
-            <div class="px-6 py-5 border-b border-gray-200">
-                <h3 id="wmName" class="text-lg font-bold text-gray-900">Mahsulot nomi</h3>
-                <p id="wmMeta" class="text-xs text-gray-500 font-mono mt-1">PLU 0000 · 0 so'm/kg</p>
+            <div class="px-6 py-5 border-b border-dune-200">
+                <h3 id="wmName" class="text-lg font-bold text-ink-900">Mahsulot nomi</h3>
+                <p id="wmMeta" class="text-xs text-ink-500 font-mono mt-1">PLU 0000 · 0 so'm/kg</p>
             </div>
             <div class="p-6">
                 <div class="grid grid-cols-2 gap-4">
                     <label class="block">
-                        <span class="text-xs font-semibold text-gray-600 mb-1 block">Summa</span>
+                        <span class="text-xs font-semibold text-ink-700 mb-1 block">Summa</span>
                         <input id="wmAmountInput" type="number" min="0" step="0.01" inputmode="decimal"
-                            class="w-full px-3 py-2.5 rounded-lg border border-gray-300 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                            class="w-full px-3 py-2.5 rounded-lg border border-dune-200 bg-dune-50 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-copper-400 focus:border-copper-400 focus:bg-white transition">
                     </label>
                     <label class="block">
-                        <span class="text-xs font-semibold text-gray-600 mb-1 block">Og'irlik</span>
+                        <span class="text-xs font-semibold text-ink-700 mb-1 block">Og'irlik</span>
                         <input id="wmWeightInput" type="number" min="0" step="0.01" inputmode="decimal"
-                            class="w-full px-3 py-2.5 rounded-lg border border-gray-300 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                            class="w-full px-3 py-2.5 rounded-lg border border-dune-200 bg-dune-50 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-copper-400 focus:border-copper-400 focus:bg-white transition">
                     </label>
                 </div>
 
                 <div class="flex gap-2 mt-4">
-                    <button type="button" onclick="applyWeightPreset(0.25)" class="flex-1 text-xs font-mono py-1.5 rounded-md border border-gray-200 bg-gray-50 hover:bg-gray-100 transition">0.25 kg</button>
-                    <button type="button" onclick="applyWeightPreset(0.5)" class="flex-1 text-xs font-mono py-1.5 rounded-md border border-gray-200 bg-gray-50 hover:bg-gray-100 transition">0.5 kg</button>
-                    <button type="button" onclick="applyWeightPreset(1)" class="flex-1 text-xs font-mono py-1.5 rounded-md border border-gray-200 bg-gray-50 hover:bg-gray-100 transition">1 kg</button>
+                    <button type="button" onclick="applyWeightPreset(0.25)" class="flex-1 text-xs font-mono py-1.5 rounded-md border border-dune-200 bg-dune-50 hover:bg-dune-100 transition">0.25 kg</button>
+                    <button type="button" onclick="applyWeightPreset(0.5)" class="flex-1 text-xs font-mono py-1.5 rounded-md border border-dune-200 bg-dune-50 hover:bg-dune-100 transition">0.5 kg</button>
+                    <button type="button" onclick="applyWeightPreset(1)" class="flex-1 text-xs font-mono py-1.5 rounded-md border border-dune-200 bg-dune-50 hover:bg-dune-100 transition">1 kg</button>
                 </div>
 
                 <div class="flex gap-3 mt-6">
-                    <button type="button" onclick="closeWeightModal()" class="flex-1 py-2.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-sm font-medium text-gray-700 transition">Bekor qilish</button>
-                    <button type="button" onclick="confirmWeight()" class="flex-1 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition shadow-sm">Qo'shish</button>
+                    <button type="button" onclick="closeWeightModal()" class="flex-1 py-2.5 rounded-lg border border-dune-200 bg-white hover:bg-dune-50 text-sm font-medium text-ink-700 transition">Bekor qilish</button>
+                    <button type="button" onclick="confirmWeight()" class="flex-1 py-2.5 rounded-lg bg-copper-500 hover:bg-copper-600 text-white text-sm font-medium transition shadow-card">Qo'shish</button>
                 </div>
             </div>
         </div>
@@ -356,14 +421,14 @@ function renderTabs() {
         const active = t.id === activeTabId;
         return `
         <div class="flex items-center shrink-0">
-            <button type="button" data-tab-id="${t.id}" class="tab-select-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${active ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
+            <button type="button" data-tab-id="${t.id}" class="tab-select-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${active ? 'bg-copper-500 text-white shadow-sm' : 'bg-dune-100 text-ink-700 hover:bg-dune-200'}">
                 <span>${escapeHtml(t.name)}</span>
-                ${count > 0 ? `<span class="font-mono ${active ? 'text-blue-100' : 'text-gray-400'}">${count}</span>` : ''}
+                ${count > 0 ? `<span class="font-mono ${active ? 'text-white/80' : 'text-ink-400'}">${count}</span>` : ''}
             </button>
-            ${tabs.length > 1 ? `<button type="button" data-close-tab-id="${t.id}" class="tab-close-btn -ml-1 mr-1 w-5 h-5 flex items-center justify-center text-gray-300 hover:text-red-500 text-sm leading-none">&times;</button>` : ''}
+            ${tabs.length > 1 ? `<button type="button" data-close-tab-id="${t.id}" class="tab-close-btn -ml-1 mr-1 w-5 h-5 flex items-center justify-center text-dune-300 hover:text-rust-500 text-sm leading-none">&times;</button>` : ''}
         </div>`;
     }).join('') + `
-        <button type="button" id="addTabBtn" class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg border border-dashed border-gray-300 text-gray-400 hover:text-blue-600 hover:border-blue-400 transition" title="Yangi mijoz">+</button>`;
+        <button type="button" id="addTabBtn" class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg border border-dashed border-dune-300 text-ink-400 hover:text-copper-500 hover:border-copper-400 transition" title="Yangi mijoz">+</button>`;
 
     el.querySelectorAll('.tab-select-btn').forEach(btn => {
         btn.addEventListener('click', () => switchTab(Number(btn.dataset.tabId)));
@@ -481,8 +546,8 @@ function renderCart() {
 
     if (cart.length === 0) {
         el.innerHTML = `
-            <div class="h-full flex flex-col items-center justify-center text-center py-10 text-gray-400">
-                <p class="text-sm font-medium text-gray-500">Bu savdo hozircha bo'sh</p>
+            <div class="h-full flex flex-col items-center justify-center text-center py-10 text-ink-400">
+                <p class="text-sm font-medium text-ink-500">Bu savdo hozircha bo'sh</p>
                 <p class="text-xs mt-1 max-w-[16rem]">Boshlash uchun shtrix-kodni skanerlang yoki mahsulotni tanlang.</p>
             </div>`;
     } else {
@@ -490,20 +555,20 @@ function renderCart() {
             const isKg = item.unit === 'kg';
             const lineTotal = isKg ? item.price * item.weight : item.price * item.qty;
             return `
-            <div class="flex items-center gap-3 py-3 border-b border-gray-100 last:border-0">
+            <div class="flex items-center gap-3 py-3 border-b border-dune-100 last:border-0">
                 <div class="min-w-0 flex-1">
-                    <p class="text-sm font-semibold text-gray-800 truncate">${escapeHtml(item.name)}</p>
-                    <p class="text-[11px] text-gray-500 font-mono mt-0.5">${isKg ? `${item.weight.toFixed(2)} kg × ${fmt(item.price)}/kg` : `${fmt(item.price)} dona narxi`}</p>
+                    <p class="text-sm font-semibold text-ink-900 truncate">${escapeHtml(item.name)}</p>
+                    <p class="text-[11px] text-ink-500 font-mono mt-0.5">${isKg ? `${item.weight.toFixed(2)} kg × ${fmt(item.price)}/kg` : `${fmt(item.price)} dona narxi`}</p>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
                     ${isKg
-                        ? `<button type="button" data-edit-barcode="${escapeHtml(item.barcode)}" class="qty-edit-btn qty-btn text-xs font-medium px-2 py-1 rounded border border-gray-200 text-gray-600 bg-gray-50 hover:bg-gray-100 transition">Tahrirlash</button>`
-                        : `<button type="button" onclick="changeQty('${escapeJs(item.barcode)}', -1)" class="qty-btn w-6 h-6 rounded border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition">−</button>
+                        ? `<button type="button" data-edit-barcode="${escapeHtml(item.barcode)}" class="qty-edit-btn qty-btn text-xs font-medium px-2 py-1 rounded border border-dune-200 text-ink-700 bg-dune-50 hover:bg-dune-100 transition">Tahrirlash</button>`
+                        : `<button type="button" onclick="changeQty('${escapeJs(item.barcode)}', -1)" class="qty-btn w-6 h-6 rounded border border-dune-200 bg-dune-50 flex items-center justify-center text-ink-700 hover:bg-dune-100 transition">−</button>
                            <span class="w-5 text-center text-xs font-mono font-bold">${item.qty}</span>
-                           <button type="button" onclick="changeQty('${escapeJs(item.barcode)}', 1)" class="qty-btn w-6 h-6 rounded border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition">+</button>`}
+                           <button type="button" onclick="changeQty('${escapeJs(item.barcode)}', 1)" class="qty-btn w-6 h-6 rounded border border-dune-200 bg-dune-50 flex items-center justify-center text-ink-700 hover:bg-dune-100 transition">+</button>`}
                 </div>
-                <p class="w-[4.5rem] text-right font-mono text-sm font-bold text-gray-900 shrink-0">${fmt(lineTotal)}</p>
-                <button type="button" onclick="removeFromCart('${escapeJs(item.barcode)}')" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 shrink-0 transition text-lg leading-none">&times;</button>
+                <p class="w-[4.5rem] text-right font-mono text-sm font-bold text-ink-900 shrink-0">${fmt(lineTotal)}</p>
+                <button type="button" onclick="removeFromCart('${escapeJs(item.barcode)}')" class="w-6 h-6 flex items-center justify-center text-ink-400 hover:text-rust-500 shrink-0 transition text-lg leading-none">&times;</button>
             </div>`;
         }).join('');
 
@@ -707,8 +772,10 @@ document.addEventListener('click', e => {
 
 function updateClock() {
     const now = new Date();
-    document.getElementById('clock').textContent = now.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    document.getElementById('todayDate').textContent = now.toLocaleDateString('uz-UZ', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    const clockEl = document.getElementById('clock');
+    const dateEl = document.getElementById('todayDate');
+    if (clockEl) clockEl.textContent = now.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    if (dateEl) dateEl.textContent = now.toLocaleDateString('uz-UZ', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 }
 
 function buildCartPayload() {
@@ -737,8 +804,8 @@ function updateStockDisplay(productId, qty) {
     const isKg = label.dataset.unit === 'kg';
     const qtyNum = Number(qty);
     label.textContent = isKg ? `Qoldiq: ${qtyNum} kg` : `Qoldiq: ${qtyNum}`;
-    label.classList.toggle('text-red-600', qtyNum === 0);
-    label.classList.toggle('text-gray-500', qtyNum !== 0);
+    label.classList.toggle('text-rust-500', qtyNum === 0);
+    label.classList.toggle('text-ink-500', qtyNum !== 0);
 }
 
 let isSubmittingSale = false;
