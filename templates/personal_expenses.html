@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 {% load humanize %}
 {% load static %}
+{% load l10n %}
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
@@ -16,11 +17,9 @@
     <link rel="icon" href="{% static 'icons/icon.png' %}" type="image/x-icon">
 
     <meta name="theme-color" content="#1E1812">
-    <!-- In your <head> -->
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
-
-<!-- Before </body> -->
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register("{% url 'service_worker' %}");
@@ -66,8 +65,6 @@
             border-radius: 999px;
             background: #DE9A56;
         }
-        /* Fixed-height body for the expenses table so the card height never
-           changes based on how many rows are actually shown */
         .fixed-card-body { min-height: 460px; }
 
         /* Reskin TomSelect to match the Karavan input + copper accent */
@@ -81,6 +78,9 @@
         .ts-dropdown { border-color: #E6D9C1; border-radius: 0.5rem; overflow: hidden; font-family: 'Manrope', sans-serif; }
         .ts-dropdown .active { background-color: #F3ECDF; color: #241C14; }
         .ts-dropdown .option { font-size: 0.875rem; }
+
+        .cat-row[data-selected="true"] { background-color: #F3ECDF; }
+        .trend-toggle[data-active="true"] { background-color: #C1692F; color: #fff; border-color: #C1692F; }
     </style>
 </head>
 
@@ -180,7 +180,6 @@
         <!-- KARTALAR VA JADVAL -->
         <div class="flex-1 overflow-y-auto overflow-x-hidden p-4 md:px-8 md:py-6 space-y-6">
 
-            <!-- Mobile-only add button, since the header with the button is hidden below md -->
             <button type="button" onclick="openModal('addExpenseModal')" class="md:hidden w-full justify-center items-center px-4 py-2.5 bg-copper-500 text-white rounded-lg text-sm font-semibold hover:bg-copper-600 transition shadow-card">
                 + Xarajat
             </button>
@@ -201,29 +200,67 @@
                 </div>
             </div>
 
-            <!-- FILTR
-            <form method="GET" action="{% url 'personal_expenses' %}" class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row flex-wrap items-end gap-4">
-                {% csrf_token %}
-                <div class="w-full sm:w-auto flex-1 sm:flex-none">
-                    <label class="block text-xs text-gray-500 mb-1">Boshlanish</label>
-                    <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                </div>
-                <div class="w-full sm:w-auto flex-1 sm:flex-none">
-                    <label class="block text-xs text-gray-500 mb-1">Tugash</label>
-                    <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                </div>
-                <div class="flex gap-2 w-full sm:w-auto">
-                    <button type="submit" class="flex-1 sm:flex-none px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 transition">Filtrlash</button>
-                    <a href="{% url 'personal_expenses' %}" class="flex-1 sm:flex-none px-4 py-2 text-center bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Tozalash</a>
-                </div>
-            </form> -->
+            <!-- KATEGORIYALAR BO'YICHA: JADVAL + DIAGRAMMA -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
 
-            <div class="grid grid-cols-1 lg:grid-cols-1 gap-6 items-start">
+                <div class="bg-white border border-dune-200 rounded-2xl shadow-card overflow-hidden flex flex-col">
+                    <div class="p-4 border-b border-dune-200 flex items-center justify-between gap-2">
+                        <h3 class="text-sm font-bold text-ink-900">Kategoriyalar bo'yicha xarajat</h3>
+                        <span class="text-[11px] text-ink-400">Filtrlash uchun bosing</span>
+                    </div>
+                    <div class="overflow-auto max-h-[340px]">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-dune-100/50 text-ink-500 text-xs uppercase border-b border-dune-200 sticky top-0">
+                                <tr>
+                                    <th class="px-4 py-3 font-medium">Kategoriya</th>
+                                    <th class="px-4 py-3 font-medium text-right">Soni</th>
+                                    <th class="px-4 py-3 font-medium text-right">Jami</th>
+                                    <th class="px-4 py-3 font-medium w-28">Ulushi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categoryStatsBody" class="divide-y divide-dune-100"></tbody>
+                            <tfoot id="categoryStatsFoot" class="border-t-2 border-dune-200 bg-dune-50/60 font-bold"></tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-dune-200 rounded-2xl shadow-card p-4 flex flex-col">
+                    <h3 class="text-sm font-bold text-ink-900 mb-3">Kategoriyalar ulushi</h3>
+                    <div class="relative flex-1 min-h-[280px]">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DINAMIKA -->
+            <div class="bg-white border border-dune-200 rounded-2xl shadow-card p-4">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-ink-900">Xarajatlar dinamikasi</h3>
+                        <p id="trendSubtitle" class="text-[11px] text-ink-400 mt-0.5"></p>
+                    </div>
+                    <div class="flex gap-1">
+                        <button type="button" data-mode="day" data-active="true" onclick="setTrendMode('day')" class="trend-toggle px-3 py-1.5 text-xs font-semibold rounded-lg border border-dune-200 bg-white text-ink-700 hover:bg-dune-100 transition">30 kun</button>
+                        <button type="button" data-mode="month" data-active="false" onclick="setTrendMode('month')" class="trend-toggle px-3 py-1.5 text-xs font-semibold rounded-lg border border-dune-200 bg-white text-ink-700 hover:bg-dune-100 transition">6 oy</button>
+                    </div>
+                </div>
+                <div class="relative h-[260px]">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6 items-start">
 
                 <!-- JADVAL -->
-                <div class="lg:col-span-2 bg-white border border-dune-200 rounded-2xl shadow-card overflow-hidden flex flex-col">
-                    <div class="p-4 border-b border-dune-200 flex justify-between items-center gap-4 h-[58px]">
-                        <input id="searchInput" type="text" placeholder="Qidirish..." class="w-full max-w-xs px-3 py-2 bg-dune-50 border border-dune-200 rounded-lg text-sm focus:ring-2 focus:ring-copper-400 focus:border-copper-400 focus:outline-none">
+                <div class="bg-white border border-dune-200 rounded-2xl shadow-card overflow-hidden flex flex-col">
+                    <div class="p-4 border-b border-dune-200 flex flex-wrap justify-between items-center gap-3 min-h-[58px]">
+                        <div class="flex flex-1 flex-wrap items-center gap-2 min-w-0">
+                            <input id="searchInput" type="text" placeholder="Qidirish..." class="w-full sm:w-56 px-3 py-2 bg-dune-50 border border-dune-200 rounded-lg text-sm focus:ring-2 focus:ring-copper-400 focus:border-copper-400 focus:outline-none">
+                            <select id="categoryFilter" class="w-full sm:w-56 px-3 py-2 bg-dune-50 border border-dune-200 rounded-lg text-sm focus:ring-2 focus:ring-copper-400 focus:border-copper-400 focus:outline-none">
+                                <option value="">Barcha kategoriyalar</option>
+                            </select>
+                            <button type="button" id="clearFiltersBtn" class="hidden px-3 py-2 text-xs font-semibold text-ink-700 bg-dune-100 hover:bg-dune-200 rounded-lg transition">Tozalash</button>
+                        </div>
                         <span id="resultsSummary" class="text-xs text-ink-500 font-medium whitespace-nowrap"></span>
                     </div>
 
@@ -233,8 +270,7 @@
                                 <tr>
                                     <th class="px-4 py-3 font-medium cursor-pointer select-none sort-btn" data-sort-key="date" onclick="setSort('date')">Sana <span class="sort-arrow">▲</span></th>
                                     <th class="px-4 py-3 font-medium cursor-pointer select-none sort-btn" data-sort-key="amount" onclick="setSort('amount')">Summa <span class="sort-arrow">▲</span></th>
-                                    <th class="px-4 py-3 font-medium cursor-pointer select-none sort-btn" data-sort-key="note" onclick="setSort('category')">Kategoriya <span class="sort-arrow">▲</span></th>
-
+                                    <th class="px-4 py-3 font-medium cursor-pointer select-none sort-btn" data-sort-key="category" onclick="setSort('category')">Kategoriya <span class="sort-arrow">▲</span></th>
                                     <th class="px-4 py-3 font-medium cursor-pointer select-none sort-btn" data-sort-key="note" onclick="setSort('note')">Tavsif <span class="sort-arrow">▲</span></th>
                                 </tr>
                             </thead>
@@ -242,17 +278,16 @@
                                 {% for expense in personal_expenses %}
                                 <tr class="expense-row hover:bg-dune-50/60 transition"
                                     data-date="{{ expense.created_at|date:'Y-m-d' }}"
-                                    data-amount="{{ expense.amount }}"
-                                    data-category="{{ expense.category }}"
+                                    data-amount="{{ expense.amount|unlocalize }}"
+                                    data-category="{{ expense.category|default:'' }}"
                                     data-note="{{ expense.note|default:'' }}">
                                     <td class="px-4 py-3 text-ink-500 whitespace-nowrap">{{ expense.created_at|date:"d.m.Y" }}</td>
                                     <td class="px-4 py-3 font-semibold text-ink-900 whitespace-nowrap">{{ expense.amount|intcomma }} so'm</td>
                                     <td class="px-4 py-3 text-ink-500 truncate max-w-[150px]">{{ expense.category|default:"—" }}</td>
-
                                     <td class="px-4 py-3 text-ink-500 truncate max-w-[150px]">{{ expense.note|default:"—" }}</td>
                                 </tr>
                                 {% empty %}
-                                <tr id="emptyDbRow"><td colspan="4" class="px-4 py-8 text-center text-ink-400">Ta'minotchi mavjud emas</td></tr>
+                                <tr id="emptyDbRow"><td colspan="4" class="px-4 py-8 text-center text-ink-400">Xarajatlar mavjud emas</td></tr>
                                 {% endfor %}
                                 <tr id="noResultsRow" class="hidden">
                                     <td colspan="4" class="px-4 py-8 text-center text-ink-400">Filtrga mos kelmadi</td>
@@ -279,7 +314,6 @@
     </div>
 
     <!-- MODALLAR -->
-    <!-- PERF: removed backdrop-blur-sm -->
     <div id="addExpenseModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-tent-900/50">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden" onclick="event.stopPropagation()">
             <div class="p-4 border-b border-dune-200 flex justify-between items-center">
@@ -295,13 +329,12 @@
 
                 <div>
                     <label class="block text-sm text-ink-700 font-medium mb-1.5">Kategoriya</label>
-
                     <select id="expenseCategorySelect" name="category" required class="w-full">
-                    <option value="" disabled selected>Search category...</option>
-                    {% for category in personal_expense_categories %}
-                    <option value="{{ category.id }}">{{ category.label }}</option>
-                    {% endfor %}
-                </select>
+                        <option value="" disabled selected>Search category...</option>
+                        {% for category in personal_expense_categories %}
+                        <option value="{{ category.id }}">{{ category.label }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
                 <div>
                     <label class="block text-sm text-ink-700 font-medium mb-1.5">Summa (so'm)</label>
@@ -322,67 +355,87 @@
 <script>
   new TomSelect("#expenseCategorySelect", {
     create: false,
-    sortField: {
-      field: "text",
-      direction: "asc"
-    },
+    sortField: { field: "text", direction: "asc" },
     placeholder: "Search or select category..."
   });
 </script>
 <script>
-    // TOGGLE SIDEBAR (Gamburger bossa menyuni ochadi/yopadi)
     function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-        sidebar.classList.toggle('-translate-x-full');
-        overlay.classList.toggle('hidden');
+        document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        document.getElementById('sidebarOverlay').classList.toggle('hidden');
     }
+
     function guardAgainstDoubleSubmit(form) {
-    if (!form) return;
-    form.addEventListener('submit', () => {
-        const submitBtn = form.querySelector('button[type="submit"]');
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Saqlanmoqda...';
-        }
-    });
-}
-
-    guardAgainstDoubleSubmit(document.querySelector('#addExpenseModal form'));
-    guardAgainstDoubleSubmit(document.querySelector('#addCategoryModal form'));
-    // Modal
-    // Updated openModal function
-    function openModal(id) {
-        const modal = document.getElementById(id);
-        if (!modal) return;
-        
-        modal.classList.remove('hidden');
-
-        // If opening the category modal, focus and select the input after it becomes visible
-        if (id === 'addCategoryModal') {
-            setTimeout(() => {
-                const inputElement = document.getElementById('categoryName');
-                if (inputElement) {
-                    inputElement.focus();
-                    inputElement.select();
-                }
-            }, 50); // 50ms delay gives the browser time to render the visible modal
-        }
+        if (!form) return;
+        form.addEventListener('submit', () => {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Saqlanmoqda...';
+            }
+        });
     }
+    guardAgainstDoubleSubmit(document.querySelector('#addExpenseModal form'));
 
+    const openModal = id => document.getElementById(id)?.classList.remove('hidden');
     const closeModal = id => document.getElementById(id).classList.add('hidden');
 
-    // Jadval JS mantiqlari
+    // ---------- Umumiy yordamchilar ----------
+    const NO_CAT = 'Kategoriyasiz';
+    const fmt = n => Math.round(n).toLocaleString('en-US').replace(/,/g, ' ');
+    const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const PALETTE = ['#C1692F', '#6E8F6C', '#DE9A56', '#8A4419', '#D3BE97', '#B85C45', '#4A4034', '#A69A87', '#A6551F', '#8A7D6C'];
+
+    // ---------- Jadval ma'lumotlari ----------
     const rows = Array.from(document.querySelectorAll('.expense-row'));
     const tbody = document.getElementById('expensesBody');
     const noResultsRow = document.getElementById('noResultsRow');
     const searchInput = document.getElementById('searchInput');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
     const resultsSummary = document.getElementById('resultsSummary');
     const pageSizeSelect = document.getElementById('pageSizeSelect');
     const pageButtons = document.getElementById('pageButtons');
 
+    const catOf = row => {
+        const c = (row.dataset.category || '').trim();
+        return (!c || c === 'None') ? NO_CAT : c;
+    };
+    const amountOf = row => parseFloat(row.dataset.amount) || 0;
+
     const columnType = { date: 'string', amount: 'number', category: 'string', note: 'string' };
-    let sortKey = 'date', sortDir = -1, search = '', page = 1, pageSize = 10;
+    let sortKey = 'date', sortDir = -1, search = '', catFilter = '', page = 1, pageSize = 10;
+
+    // Kategoriyalar bo'yicha statistika (barcha xarajatlar bo'yicha)
+    const stats = (() => {
+        const map = new Map();
+        rows.forEach(r => {
+            const name = catOf(r);
+            const s = map.get(name) || { name, count: 0, total: 0 };
+            s.count += 1; s.total += amountOf(r);
+            map.set(name, s);
+        });
+        const list = [...map.values()].sort((a, b) => b.total - a.total);
+        list.forEach((s, i) => s.color = PALETTE[i % PALETTE.length]);
+        return list;
+    })();
+    const grandTotal = stats.reduce((s, c) => s + c.total, 0);
+
+    // Filtr dropdownini to'ldirish
+    [...stats].sort((a, b) => a.name.localeCompare(b.name)).forEach(s => {
+        const o = document.createElement('option');
+        o.value = s.name; o.textContent = `${s.name} (${s.count})`;
+        categoryFilter.appendChild(o);
+    });
+
+    function setCategoryFilter(name) {
+        catFilter = name;
+        categoryFilter.value = name;
+        page = 1;
+        render();
+        renderCategoryStats();
+        updateTrend();
+    }
 
     function setSort(key) {
         sortDir = (sortKey === key) ? sortDir * -1 : 1;
@@ -392,6 +445,7 @@
     }
 
     function render() {
+        clearFiltersBtn.classList.toggle('hidden', !catFilter && !search);
         if (!rows.length) return;
 
         const sorted = [...rows].sort((a, b) => {
@@ -409,7 +463,8 @@
         });
 
         const filtered = sorted.filter(row =>
-            !search || (row.dataset.note + row.dataset.category).toLowerCase().includes(search)
+            (!catFilter || catOf(row) === catFilter) &&
+            (!search || (row.dataset.note + ' ' + catOf(row)).toLowerCase().includes(search))
         );
         noResultsRow.classList.toggle('hidden', filtered.length !== 0);
 
@@ -420,34 +475,12 @@
         rows.forEach(row => row.classList.add('hidden'));
         filtered.forEach((row, i) => row.classList.toggle('hidden', !(i >= start && i < end)));
 
+        const filteredSum = filtered.reduce((s, r) => s + amountOf(r), 0);
         resultsSummary.textContent = filtered.length
-            ? `${start + 1}–${Math.min(end, filtered.length)} / ${filtered.length}`
+            ? `${start + 1}–${Math.min(end, filtered.length)} / ${filtered.length} · ${fmt(filteredSum)} so'm`
             : '0 natija';
 
         renderPagination(totalPages);
-    }
-    function filterCategoryDropdown() {
-        const query = document.getElementById('categorySearchInput').value.toLowerCase();
-        const select = document.getElementById('expenseCategorySelect');
-        const options = select.options;
-
-        for (let i = 0; i < options.length; i++) {
-            const txt = options[i].text.toLowerCase();
-            // Agar matn mos kelsa ko'rsatiladi, aks holda yashiriladi
-            if (txt.includes(query)) {
-                options[i].style.display = '';
-            } else {
-                options[i].style.display = 'none';
-            }
-        }
-
-        // Agar qidiruvga mos birinchi element ko'rinmay qolsa, ko'rinib turgan birinchisini tanlash uchun mantiq
-        for (let i = 0; i < options.length; i++) {
-            if (options[i].style.display !== 'none') {
-                select.selectedIndex = i;
-                break;
-            }
-        }
     }
 
     function renderPagination(totalPages) {
@@ -456,9 +489,7 @@
             const b = document.createElement('button');
             b.type = 'button'; b.textContent = label; b.disabled = !!opts.disabled;
             if (opts.active) b.dataset.active = 'true';
-
             b.className = 'page-btn w-8 h-8 flex items-center justify-center rounded-lg border border-dune-200 bg-white text-ink-500 text-sm hover:bg-dune-100 disabled:opacity-50 disabled:cursor-not-allowed transition';
-
             b.onclick = () => { page = target; render(); };
             pageButtons.appendChild(b);
         };
@@ -468,9 +499,9 @@
             if (p === 1 || p === totalPages || Math.abs(p - page) <= 1) {
                 btn(String(p), p, { active: p === page });
             } else if (Math.abs(p - page) === 2) {
-                const s = document.createElement('span'); 
-                s.textContent = '…'; 
-                s.className = 'px-1 text-ink-400'; 
+                const s = document.createElement('span');
+                s.textContent = '…';
+                s.className = 'px-1 text-ink-400';
                 pageButtons.appendChild(s);
             }
         }
@@ -478,70 +509,143 @@
     }
 
     searchInput?.addEventListener('input', e => { search = e.target.value.trim().toLowerCase(); page = 1; render(); });
+    categoryFilter?.addEventListener('change', e => setCategoryFilter(e.target.value));
+    clearFiltersBtn?.addEventListener('click', () => {
+        search = ''; searchInput.value = '';
+        setCategoryFilter('');
+    });
     pageSizeSelect?.addEventListener('change', e => { pageSize = +e.target.value; page = 1; render(); });
 
-    render();
-
-    // Kategoriyalar ro'yxati uchun paginatsiya
-    const categoryRows = Array.from(document.querySelectorAll('.category-row'));
-    const categoryNoResults = document.getElementById('categoryNoResults');
-    const categoryResultsSummary = document.getElementById('categoryResultsSummary');
-    const categoryPageButtons = document.getElementById('categoryPageButtons');
-    const categoryPageSizeSelect = document.getElementById('categoryPageSizeSelect');
-    let categoryPageSize = categoryPageSizeSelect ? +categoryPageSizeSelect.value : 6;
-    let categoryPage = 1;
-
-    function renderCategoryPage() {
-        if (!categoryRows.length) {
-            categoryResultsSummary.textContent = '';
-            categoryPageButtons.innerHTML = '';
+    // ---------- Kategoriyalar jadvali ----------
+    function renderCategoryStats() {
+        const body = document.getElementById('categoryStatsBody');
+        const foot = document.getElementById('categoryStatsFoot');
+        if (!stats.length) {
+            body.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-ink-400">Ma'lumot yo'q</td></tr>`;
+            foot.innerHTML = '';
             return;
         }
-
-        const totalPages = Math.max(1, Math.ceil(categoryRows.length / categoryPageSize));
-        categoryPage = Math.min(Math.max(categoryPage, 1), totalPages);
-        const start = (categoryPage - 1) * categoryPageSize;
-        const end = start + categoryPageSize;
-
-        categoryRows.forEach((row, i) => row.classList.toggle('hidden', !(i >= start && i < end)));
-        categoryNoResults.classList.add('hidden');
-
-        categoryResultsSummary.textContent = `${start + 1}–${Math.min(end, categoryRows.length)} / ${categoryRows.length}`;
-
-        renderCategoryPagination(totalPages);
+        body.innerHTML = stats.map((s, i) => {
+            const pct = grandTotal ? (s.total / grandTotal) * 100 : 0;
+            return `
+            <tr class="cat-row cursor-pointer hover:bg-dune-50/60 transition" data-idx="${i}" data-selected="${catFilter === s.name}">
+                <td class="px-4 py-3 text-ink-900 font-medium">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full mr-2 align-middle" style="background:${s.color}"></span>${escapeHtml(s.name)}
+                </td>
+                <td class="px-4 py-3 text-right text-ink-500">${s.count}</td>
+                <td class="px-4 py-3 text-right font-semibold text-ink-900 whitespace-nowrap">${fmt(s.total)} so'm</td>
+                <td class="px-4 py-3">
+                    <div class="flex items-center gap-2">
+                        <div class="flex-1 h-1.5 bg-dune-100 rounded-full overflow-hidden"><div class="h-full rounded-full" style="width:${pct.toFixed(1)}%;background:${s.color}"></div></div>
+                        <span class="text-[11px] text-ink-500 w-9 text-right">${pct.toFixed(0)}%</span>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+        foot.innerHTML = `
+            <tr>
+                <td class="px-4 py-3 text-ink-900">Jami</td>
+                <td class="px-4 py-3 text-right text-ink-700">${rows.length}</td>
+                <td class="px-4 py-3 text-right text-ink-900 whitespace-nowrap">${fmt(grandTotal)} so'm</td>
+                <td></td>
+            </tr>`;
+        body.querySelectorAll('.cat-row').forEach(tr => {
+            tr.addEventListener('click', () => {
+                const name = stats[+tr.dataset.idx].name;
+                setCategoryFilter(catFilter === name ? '' : name);
+            });
+        });
     }
 
-    function renderCategoryPagination(totalPages) {
-        categoryPageButtons.innerHTML = '';
-        if (totalPages <= 1) return;
+    // ---------- Diagrammalar ----------
+    let categoryChart = null, trendChart = null, trendMode = 'day';
 
-        const btn = (label, target, opts = {}) => {
-            const b = document.createElement('button');
-            b.type = 'button'; b.textContent = label; b.disabled = !!opts.disabled;
-            if (opts.active) b.dataset.active = 'true';
-
-            b.className = 'page-btn w-8 h-8 flex items-center justify-center rounded-lg border border-dune-200 bg-white text-ink-500 text-sm hover:bg-dune-100 disabled:opacity-50 disabled:cursor-not-allowed transition';
-
-            b.onclick = () => { categoryPage = target; renderCategoryPage(); };
-            categoryPageButtons.appendChild(b);
-        };
-
-        btn('‹', categoryPage - 1, { disabled: categoryPage === 1 });
-        for (let p = 1; p <= totalPages; p++) {
-            if (p === 1 || p === totalPages || Math.abs(p - categoryPage) <= 1) {
-                btn(String(p), p, { active: p === categoryPage });
-            } else if (Math.abs(p - categoryPage) === 2) {
-                const s = document.createElement('span');
-                s.textContent = '…';
-                s.className = 'px-1 text-ink-400';
-                categoryPageButtons.appendChild(s);
+    function initCategoryChart() {
+        if (typeof Chart === 'undefined' || !stats.length) return;
+        categoryChart = new Chart(document.getElementById('categoryChart'), {
+            type: 'doughnut',
+            data: {
+                labels: stats.map(s => s.name),
+                datasets: [{ data: stats.map(s => s.total), backgroundColor: stats.map(s => s.color), borderColor: '#fff', borderWidth: 2 }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                cutout: '62%',
+                plugins: {
+                    legend: { position: 'right', labels: { boxWidth: 10, boxHeight: 10, font: { family: 'Manrope', size: 11 }, color: '#4A4034' } },
+                    tooltip: { callbacks: { label: c => ` ${c.label}: ${fmt(c.parsed)} so'm (${grandTotal ? ((c.parsed / grandTotal) * 100).toFixed(1) : 0}%)` } }
+                },
+                onClick: (_, els) => {
+                    if (!els.length) return;
+                    const name = stats[els[0].index].name;
+                    setCategoryFilter(catFilter === name ? '' : name);
+                }
             }
-        }
-        btn('›', categoryPage + 1, { disabled: categoryPage === totalPages });
+        });
     }
 
-    renderCategoryPage();
-    categoryPageSizeSelect?.addEventListener('change', e => { categoryPageSize = +e.target.value; categoryPage = 1; renderCategoryPage(); });
+    const pad = n => String(n).padStart(2, '0');
+    const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+    function trendData() {
+        const src = rows.filter(r => !catFilter || catOf(r) === catFilter);
+        const now = new Date();
+        const keys = [], labels = [], sums = {};
+
+        if (trendMode === 'day') {
+            for (let i = 29; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+                keys.push(ymd(d)); labels.push(`${pad(d.getDate())}.${pad(d.getMonth() + 1)}`);
+            }
+            src.forEach(r => { const k = r.dataset.date; sums[k] = (sums[k] || 0) + amountOf(r); });
+        } else {
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                keys.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}`);
+                labels.push(`${pad(d.getMonth() + 1)}.${d.getFullYear()}`);
+            }
+            src.forEach(r => { const k = (r.dataset.date || '').slice(0, 7); sums[k] = (sums[k] || 0) + amountOf(r); });
+        }
+        return { labels, values: keys.map(k => sums[k] || 0) };
+    }
+
+    function updateTrend() {
+        const sub = document.getElementById('trendSubtitle');
+        sub.textContent = catFilter ? `Kategoriya: ${catFilter}` : 'Barcha kategoriyalar';
+        if (typeof Chart === 'undefined') return;
+
+        const { labels, values } = trendData();
+        if (!trendChart) {
+            trendChart = new Chart(document.getElementById('trendChart'), {
+                type: 'bar',
+                data: { labels, datasets: [{ data: values, backgroundColor: '#C1692F', borderRadius: 4, maxBarThickness: 28 }] },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${fmt(c.parsed.y)} so'm` } } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { family: 'Manrope', size: 10 }, color: '#8A7D6C', maxRotation: 0, autoSkip: true } },
+                        y: { beginAtZero: true, grid: { color: '#F3ECDF' }, ticks: { font: { family: 'Manrope', size: 10 }, color: '#8A7D6C', callback: v => fmt(v) } }
+                    }
+                }
+            });
+        } else {
+            trendChart.data.labels = labels;
+            trendChart.data.datasets[0].data = values;
+            trendChart.update();
+        }
+    }
+
+    function setTrendMode(mode) {
+        trendMode = mode;
+        document.querySelectorAll('.trend-toggle').forEach(b => b.dataset.active = (b.dataset.mode === mode));
+        updateTrend();
+    }
+
+    // ---------- Boshlash ----------
+    render();
+    renderCategoryStats();
+    initCategoryChart();
+    updateTrend();
 </script>
 
 </body>
