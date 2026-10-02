@@ -4,13 +4,11 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = "*"
-whitenoise = "*"
+django = "==6.1.1"
 environs = "*"
 python-dateutil = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.15"
-python_full_version = "3.15.0"
+python_version = "3.14"
