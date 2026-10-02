@@ -457,10 +457,15 @@ function getCardStock(barcode) {
     return isNaN(stock) ? Infinity : stock;
 }
 
-// Products with 0 stock may still be added to a sale (shown greyed out in
-// the cart). Only products that have SOME stock are limited to that stock.
-function isOutOfStock(barcode) {
-    return getCardStock(barcode) <= 0;
+// The cashier may enter MORE than the shop has in stock. The amount is split
+// into the part covered by stock (a normal sale line) and the excess (shown
+// greyed out; it counts toward the total but is NOT submitted to the server).
+const round3 = n => Math.round(n * 1000) / 1000;
+function splitQty(barcode, total) {
+    const stock = Math.max(getCardStock(barcode), 0);   // Infinity if unknown
+    const inStock = round3(Math.min(total, stock));
+    const over = round3(total - inStock);
+    return { inStock, over };
 }
 
 function addToCart(id, name, price, barcode) {
@@ -469,12 +474,9 @@ function addToCart(id, name, price, barcode) {
     const wantQty = (existing ? existing.qty : 0) + 1;
     const stock = getCardStock(barcode);
 
-    if (stock > 0 && wantQty > stock) {
-        showToast(`${name} - yetarli emas`, 'error');
-        refocusSearch();
-        return;
+    if (wantQty > stock) {
+        showToast(`${name} - omborda yetarli emas, ortiqchasi faqat jamiga qo'shiladi`, 'error');
     }
-    if (stock <= 0) showToast(`${name} - omborda yo'q (qoldiq 0)`, 'error');
 
     if (existing) existing.qty += 1;
     else cart.push({ id, barcode, name, price, qty: 1 });
@@ -490,10 +492,8 @@ function changeQty(barcode, delta) {
 
     if (delta > 0) {
         const stock = getCardStock(barcode);
-        if (stock > 0 && item.qty + delta > stock) {
-            showToast(`${item.name} - yetarli emas`, 'error');
-            refocusSearch();
-            return;
+        if (item.qty + delta > stock) {
+            showToast(`${item.name} - omborda yetarli emas, ortiqchasi faqat jamiga qo'shiladi`, 'error');
         }
     }
 
@@ -544,6 +544,37 @@ function updateCardBadge(barcode) {
     badge.style.display = 'flex';
 }
 
+// One visual row of the cart. A cart item can render as two rows: the part
+// covered by stock (normal) and the excess (grey). The +/- / edit controls
+// always sit on the LAST row, the remove button on the FIRST row.
+function cartRowHtml(item, part, isFirst, isLast) {
+    const isKg = item.unit === 'kg';
+    const grey = part.grey;
+    const lineTotal = item.price * part.amount;
+    const sub = isKg ? `${part.amount.toFixed(2)} kg × ${fmt(item.price)}/kg` : `${part.amount} × ${fmt(item.price)}`;
+    const controls = !isLast ? '' : (isKg
+        ? `<button type="button" data-edit-barcode="${escapeHtml(item.barcode)}" class="qty-edit-btn qty-btn text-xs font-medium px-2 py-1 rounded border border-dune-200 text-ink-700 bg-dune-50 hover:bg-dune-100 transition">Tahrirlash</button>`
+        : `<button type="button" onclick="changeQty('${escapeJs(item.barcode)}', -1)" class="qty-btn w-6 h-6 rounded border border-dune-200 bg-dune-50 flex items-center justify-center text-ink-700 hover:bg-dune-100 transition">−</button>
+           <span class="w-5 text-center text-xs font-mono font-bold">${part.amount}</span>
+           <button type="button" onclick="changeQty('${escapeJs(item.barcode)}', 1)" class="qty-btn w-6 h-6 rounded border border-dune-200 bg-dune-50 flex items-center justify-center text-ink-700 hover:bg-dune-100 transition">+</button>`);
+    const removeBtn = isFirst
+        ? `<button type="button" onclick="removeFromCart('${escapeJs(item.barcode)}')" class="w-6 h-6 flex items-center justify-center text-ink-400 hover:text-rust-500 shrink-0 transition text-lg leading-none">&times;</button>`
+        : `<span class="w-6 shrink-0"></span>`;
+    const badge = grey
+        ? ' <span title="Savdoga yozilmaydi, faqat jami hisobiga qo\'shiladi" class="ml-1 align-middle text-[10px] font-bold uppercase tracking-wide text-rust-500 bg-rust-50 border border-rust-500/30 rounded px-1.5 py-0.5">Omborda yo\'q</span>'
+        : '';
+    return `
+    <div class="flex items-center gap-3 py-3 border-b border-dune-100 last:border-0 ${grey ? 'opacity-60 grayscale bg-dune-100/60 -mx-2 px-2 rounded' : ''}">
+        <div class="min-w-0 flex-1">
+            <p class="text-sm font-semibold text-ink-900 truncate">${escapeHtml(item.name)}${badge}</p>
+            <p class="text-[11px] text-ink-500 font-mono mt-0.5">${sub}</p>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">${controls}</div>
+        <p class="w-[4.5rem] text-right font-mono text-sm font-bold text-ink-900 shrink-0">${fmt(lineTotal)}</p>
+        ${removeBtn}
+    </div>`;
+}
+
 function renderCart() {
     renderTabs();
 
@@ -561,24 +592,11 @@ function renderCart() {
     } else {
         el.innerHTML = cart.map(item => {
             const isKg = item.unit === 'kg';
-            const lineTotal = isKg ? item.price * item.weight : item.price * item.qty;
-            const oos = isOutOfStock(item.barcode);
-            return `
-            <div class="flex items-center gap-3 py-3 border-b border-dune-100 last:border-0 ${oos ? 'opacity-60 grayscale bg-dune-100/60 -mx-2 px-2 rounded' : ''}">
-                <div class="min-w-0 flex-1">
-                    <p class="text-sm font-semibold text-ink-900 truncate">${escapeHtml(item.name)}${oos ? ' <span class="ml-1 align-middle text-[10px] font-bold uppercase tracking-wide text-rust-500 bg-rust-50 border border-rust-500/30 rounded px-1.5 py-0.5">Qoldiq: 0</span>' : ''}</p>
-                    <p class="text-[11px] text-ink-500 font-mono mt-0.5">${isKg ? `${item.weight.toFixed(2)} kg × ${fmt(item.price)}/kg` : `${fmt(item.price)} dona narxi`}</p>
-                </div>
-                <div class="flex items-center gap-1.5 shrink-0">
-                    ${isKg
-                        ? `<button type="button" data-edit-barcode="${escapeHtml(item.barcode)}" class="qty-edit-btn qty-btn text-xs font-medium px-2 py-1 rounded border border-dune-200 text-ink-700 bg-dune-50 hover:bg-dune-100 transition">Tahrirlash</button>`
-                        : `<button type="button" onclick="changeQty('${escapeJs(item.barcode)}', -1)" class="qty-btn w-6 h-6 rounded border border-dune-200 bg-dune-50 flex items-center justify-center text-ink-700 hover:bg-dune-100 transition">−</button>
-                           <span class="w-5 text-center text-xs font-mono font-bold">${item.qty}</span>
-                           <button type="button" onclick="changeQty('${escapeJs(item.barcode)}', 1)" class="qty-btn w-6 h-6 rounded border border-dune-200 bg-dune-50 flex items-center justify-center text-ink-700 hover:bg-dune-100 transition">+</button>`}
-                </div>
-                <p class="w-[4.5rem] text-right font-mono text-sm font-bold text-ink-900 shrink-0">${fmt(lineTotal)}</p>
-                <button type="button" onclick="removeFromCart('${escapeJs(item.barcode)}')" class="w-6 h-6 flex items-center justify-center text-ink-400 hover:text-rust-500 shrink-0 transition text-lg leading-none">&times;</button>
-            </div>`;
+            const { inStock, over } = splitQty(item.barcode, isKg ? item.weight : item.qty);
+            const parts = [];
+            if (inStock > 0) parts.push({ amount: inStock, grey: false });
+            if (over > 0)    parts.push({ amount: over,    grey: true  });
+            return parts.map((p, i) => cartRowHtml(item, p, i === 0, i === parts.length - 1)).join('');
         }).join('');
 
         // Wire up "Tahrirlash" buttons without inline JS string interpolation,
@@ -663,10 +681,8 @@ function confirmWeight() {
 
     if (!isNaN(weight) && weight > 0) {
         const stock = getCardStock(wmBarcode);
-        if (stock > 0 && weight > stock) {
-            showToast(`${wmName} - yetarli emas`, 'error');
-            refocusSearch();
-            return;
+        if (weight > stock) {
+            showToast(`${wmName} - omborda yetarli emas, ortiqchasi faqat jamiga qo'shiladi`, 'error');
         }
     }
 
@@ -788,13 +804,18 @@ function updateClock() {
 }
 
 function buildCartPayload() {
+    // Only the in-stock part of each line is sent to the server. The excess
+    // (greyed out in the cart) is used for the on-screen total only.
     return getActiveCart().reduce((acc, item) => {
+        const isKg = item.unit === 'kg';
+        const { inStock } = splitQty(item.barcode, isKg ? item.weight : item.qty);
+        if (inStock <= 0) return acc;
         acc[item.id] = {
             barcode: item.barcode,
             name: item.name,
             price: item.price,
-            qty: item.unit === 'kg' ? null : item.qty,
-            weight: item.unit === 'kg' ? item.weight : null
+            qty: isKg ? null : inStock,
+            weight: isKg ? inStock : null
         };
         return acc;
     }, {});
@@ -822,6 +843,17 @@ let isSubmittingSale = false;
 function submitSale() {
     const tab = getActiveTab();
     if (tab.cart.length === 0 || isSubmittingSale) return;
+
+    // Cart contains only out-of-stock items: nothing to record on the server.
+    if (Object.keys(buildCartPayload()).length === 0) {
+        const barcodes = tab.cart.map(c => c.barcode);
+        finishTabAfterSale();
+        renderCart();
+        barcodes.forEach(updateCardBadge);
+        showToast("Omborda yo'q mahsulotlar - savdoga yozilmadi", 'error');
+        refocusSearch();
+        return;
+    }
 
     isSubmittingSale = true;
     const chargeBtn = document.getElementById('chargeBtn');
