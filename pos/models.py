@@ -26,7 +26,7 @@ class Sale(models.Model):
     paid_by = models.CharField(choices=PAID_BY_CHOICES, max_length=100, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.id} - {timezone.localtime(self.created_at)}"
+        return f"{self.id} - {timezone.localtime(self.created_at)} - {self.total}"
 
 
 class SaleItem(models.Model):
@@ -37,7 +37,7 @@ class SaleItem(models.Model):
     profit = models.FloatField()
 
     def __str__(self):
-        return self.product.name
+        return f"{self.product.name} - {self.sale.id}"
 
 class Supplier(models.Model):
     name = models.CharField(max_length=100)

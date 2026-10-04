@@ -9,7 +9,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 
-from datetime import datetime, timedelta, time
+from datetime import timedelta, time, datetime
 from dateutil.relativedelta import relativedelta
 import calendar
 
@@ -97,24 +97,10 @@ def dashboard(request):
     today = now.date()
     today_midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
     yesterday = today - timedelta(days=1)
-    yesterday_midnight = today_midnight - timedelta(days=1)
-    yesterday_current_time = now - timedelta(days=1)
+    
 
     #x-report
-    yesterday_sales = Sale.objects.filter(created_at__range=(yesterday_midnight, yesterday_current_time))
     today_sales = Sale.objects.filter(created_at__range=(today_midnight, now))
-    yesterday_total_sales = yesterday_sales.aggregate(Sum("total"))["total__sum"] or 0
-    today_total_sales = today_sales.aggregate(Sum("total"))["total__sum"] or 0
-
-    today_sales_change_pct = get_percent_change(new_value=today_total_sales, old_value=yesterday_total_sales)
-
-
-    today_items_sold = SaleItem.objects.filter(sale__created_at__range=(today_midnight, now)
-                                         ).aggregate(Sum("qty"))["qty__sum"] or 0
-    yesterday_items_sold = SaleItem.objects.filter(sale__created_at__range=(yesterday_midnight, yesterday_current_time)
-                                                   ).aggregate(Sum("qty"))["qty__sum"] or 0
-
-    items_sold_change_pct = get_percent_change(new_value=today_items_sold, old_value=yesterday_items_sold)
 
 
     #sales by hour
@@ -145,7 +131,6 @@ def dashboard(request):
 
     #REPORTS
     today_period = get_period_totals(today, today)
-
     yesterday_period = get_period_totals(yesterday, yesterday)
     week_period = get_period_totals(today - timedelta(days=6), today)
     month_param = request.GET.get("month")
@@ -167,23 +152,19 @@ def dashboard(request):
        total=Sum(ExpressionWrapper(F("vendor_cost") * F("qty"), output_field=FloatField()))
    )["total"] or 0
 
+    today_sales_change_pct = get_percent_change(new_value=today_period["total_sales"], old_value=yesterday_period["total_sales"])
 
     context = {
     # Today
-    "today_sales": today_sales,
-    "today_total_sales": today_total_sales,
+    "today_total_sales": today_period["total_sales"],
     "today_total_profit": today_period["total_profit"],
-    "today_total_supplier_payments": SupplierPayment.objects.filter(created_at__date=today).aggregate(Sum("amount"))["amount__sum"] or 0,
+    "today_total_supplier_payments": today_period["total_supplier_payments"],
     "today_sales_change_pct": today_sales_change_pct,
-    "today_items_sold": today_items_sold,
-    "items_sold_change_pct": items_sold_change_pct,
     "today_sales_by_hour": today_sales_by_hour,
     "today_top_sellers": today_top_sellers[:6],
 
     # Yesterday
-    "yesterday_sales": yesterday_sales,
-    "yesterday_total_sales": yesterday_total_sales,
-    "yesterday_total_sales_period": yesterday_period["total_sales"],
+    "yesterday_total_sales": yesterday_period["total_sales"],
     "yesterday_total_profit": yesterday_period["total_profit"],
     "yesterday_total_supplier_payments": yesterday_period["total_supplier_payments"],
 
