@@ -13,7 +13,7 @@ class Product(models.Model):
     pinned = models.BooleanField(null=True, blank=True, default=False)
 
     def __str__(self):
-        return self.name
+        return f"{self.name} - {self.vendor_cost} - {self.sales_price}"
 
 class Sale(models.Model):
     PAID_BY_CHOICES = [
