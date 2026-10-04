@@ -493,3 +493,12 @@ def pin_product(request, product_id):
     product.pinned = not product.pinned
     product.save()
     return redirect('/pos/')
+
+
+@login_required
+def add_personal_expense_category(request):
+    if request.method == "POST":
+        label = request.POST.get("label")
+        PersonalExpenseCategory.objects.create(label=label)
+        return redirect("/personal/")
+    

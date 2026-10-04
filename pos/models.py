@@ -16,8 +16,14 @@ class Product(models.Model):
         return self.name
 
 class Sale(models.Model):
+    PAID_BY_CHOICES = [
+        ('cash', 'Cash'),
+        ('card', 'Card'),
+        ('qr', 'QR')
+    ]
     created_at = models.DateTimeField()
     total = models.IntegerField()
+    paid_by = models.CharField(choices=PAID_BY_CHOICES, max_length=100, null=True, blank=True)
 
     def __str__(self):
         return f"{self.id} - {timezone.localtime(self.created_at)}"

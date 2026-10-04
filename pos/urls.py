@@ -25,4 +25,5 @@ urlpatterns = [
     path('sw.js', pos_views.service_worker, name='service_worker'),
 
     path('accounts/login/', pos_views.login_view, name='login'),
+    path('personal/add_category/', pos_views.add_personal_expense_category, name='add_personal_expense_category'),
 ]
