@@ -3,3 +3,8 @@
 .env
 db.sqlite3
 node_modules/
+__pycache__/
+.vscode/
+pos/__pycache__/
+config/__pycache__/
+staticfiles/
