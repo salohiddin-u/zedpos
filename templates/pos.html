@@ -75,7 +75,6 @@
         .product-card:active { transform: scale(0.98); }
 
         #toast { transition: transform 0.35s ease, opacity 0.35s ease; }
-        /* Change 16px to -16px here so it slides down from the top */
         #toast[data-show="false"] { transform: translateY(-16px); opacity: 0; pointer-events: none; }
         #toast[data-show="true"]  { transform: translateY(0);    opacity: 1; }
         #toast[data-variant="error"] { background-color: #cb311d; } /* rust-500 */
@@ -88,6 +87,14 @@
             width: 3px;
             border-radius: 999px;
             background: #DE9A56;
+        }
+
+        /* Payment method buttons */
+        .pay-method-btn { background: #fff; }
+        .pay-method-btn[data-selected="true"] {
+            border-color: #C1692F;
+            background: #FBF1E8;
+            box-shadow: 0 0 0 2px #DE9A56;
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -210,7 +217,7 @@
     data-weight="1"
     onclick="openWeightModal(this.dataset.id, this.dataset.displayName, parseFloat(this.dataset.price), this.dataset.barcode)"
     class="product-card cursor-pointer relative text-left bg-white border border-dune-200 rounded-xl p-4 flex flex-col gap-2 hover:border-copper-400 hover:shadow-card transition">
-    
+
     <!-- PIN BUTTON START -->
     <button type="button" onclick="pinProduct(event, '{{ product.id }}')" class="absolute top-2 right-2 text-dune-300 hover:text-copper-500 p-1 z-10 transition focus:outline-none" title="Qistirish">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -235,13 +242,13 @@
     data-barcode="{{product.barcode}}"
     onclick="addToCart(this.dataset.id, this.dataset.displayName, parseFloat(this.dataset.price), this.dataset.barcode)"
     class="product-card cursor-pointer relative text-left bg-white border border-dune-200 rounded-xl p-4 flex flex-col gap-2 hover:border-copper-400 hover:shadow-card transition">
-    
+
     <!-- PIN BUTTON START -->
     <button type="button" onclick="pinProduct(event, '{{ product.id }}')" class="absolute top-2 right-2 p-1 z-10 transition focus:outline-none {% if product.pinned %}text-copper-500{% else %}text-dune-300 hover:text-copper-500{% endif %}" title="Qistirish">
-    <svg class="w-5 h-5 {% if product.pinned %}fill-current{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-    </svg>
-</button>
+        <svg class="w-5 h-5 {% if product.pinned %}fill-current{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+        </svg>
+    </button>
     <!-- PIN BUTTON END -->
 
     <span class="card-badge hidden absolute -top-2 -right-2 min-w-[1.5rem] h-6 px-1.5 rounded-full text-[11px] bg-copper-500 text-white font-mono font-bold items-center justify-center shadow"></span>
@@ -260,7 +267,7 @@
             {% csrf_token %}
             <div class="flex-1 flex flex-col p-4 md:p-6 min-h-0">
                 <div class="flex-1 min-h-0 bg-white rounded-xl shadow-card border border-dune-200 ticket-notch flex flex-col overflow-hidden">
-                    
+
                     <div class="px-5 pt-5 pb-3 shrink-0">
                         <div class="flex items-center justify-between">
                             <div>
@@ -287,19 +294,53 @@
                 </div>
 
                 <div class="shrink-0 pt-4">
-                    <button type="button" id="chargeBtn" onclick="submitSale()"
+                    <button type="button" id="chargeBtn" onclick="openPayModal()"
                         class="w-full py-4 rounded-xl bg-copper-500 hover:bg-copper-600 text-white font-bold text-lg transition shadow-card disabled:opacity-50 disabled:cursor-not-allowed">
                         To'lov <span id="chargeAmt" class="ml-1 opacity-90 font-mono text-base font-medium">0 so'm</span>
+                        <span class="ml-2 text-[10px] font-mono font-medium bg-white/20 px-1.5 py-0.5 rounded align-middle">F1</span>
                     </button>
+                    <p class="text-[10px] text-ink-400 font-mono text-center mt-2">F2 Naqd · F3 Karta · F4 QR</p>
                 </div>
             </div>
             <div id="cartFields"></div>
         </form>
     </div>
 
-    <div id="toast" data-show="false" class="fixed top-6 left-6 md:left-[17rem] bg-tent-900 text-white px-5 py-3.5 rounded-xl shadow-lg z-50">
-    <span id="toastText" class="text-sm font-medium"></span>
-</div>
+    <div id="toast" data-show="false" class="fixed top-6 left-6 md:left-[17rem] bg-tent-900 text-white px-5 py-3.5 rounded-xl shadow-lg z-[60]">
+        <span id="toastText" class="text-sm font-medium"></span>
+    </div>
+
+    <!-- Payment method modal -->
+    <div id="payModal" data-show="false" class="fixed inset-0 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+        <div onclick="closePayModal()" class="absolute inset-0 bg-tent-900/60"></div>
+        <div class="relative bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+            <div class="px-6 py-5 border-b border-dune-200 flex items-baseline justify-between">
+                <h3 class="text-lg font-bold text-ink-900">To'lov usuli</h3>
+                <span id="payTotal" class="font-mono text-xl font-bold text-ink-900">0 so'm</span>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-3 gap-3">
+                    <button type="button" data-method="cash" onclick="selectPayMethod('cash')" class="pay-method-btn rounded-xl border border-dune-200 py-4 flex flex-col items-center gap-1 transition">
+                        <span class="text-sm font-semibold">Naqd</span>
+                        <span class="text-[10px] font-mono text-ink-400">1 / N / F2</span>
+                    </button>
+                    <button type="button" data-method="card" onclick="selectPayMethod('card')" class="pay-method-btn rounded-xl border border-dune-200 py-4 flex flex-col items-center gap-1 transition">
+                        <span class="text-sm font-semibold">Karta</span>
+                        <span class="text-[10px] font-mono text-ink-400">2 / K / F3</span>
+                    </button>
+                    <button type="button" data-method="qr" onclick="selectPayMethod('qr')" class="pay-method-btn rounded-xl border border-dune-200 py-4 flex flex-col items-center gap-1 transition">
+                        <span class="text-sm font-semibold">QR</span>
+                        <span class="text-[10px] font-mono text-ink-400">3 / Q / F4</span>
+                    </button>
+                </div>
+
+                <div class="flex gap-3 mt-6">
+                    <button type="button" onclick="closePayModal()" class="flex-1 py-2.5 rounded-lg border border-dune-200 bg-white hover:bg-dune-50 text-sm font-medium text-ink-700 transition">Bekor qilish <span class="font-mono text-[10px] text-ink-400">Esc</span></button>
+                    <button type="button" onclick="confirmPayment()" class="flex-1 py-2.5 rounded-lg bg-copper-500 hover:bg-copper-600 text-white text-sm font-medium transition shadow-card">Tasdiqlash <span class="font-mono text-[10px] opacity-80">Enter</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="weightModal" data-show="false" class="fixed inset-0 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
         <div onclick="closeWeightModal()" class="absolute inset-0 bg-tent-900/60 "></div>
@@ -348,12 +389,8 @@ function toggleSidebar() {
 const fmt = n => Math.round(n).toLocaleString('en-US').replace(/,/g, ' ') + " so'm";
 
 // ---- Multi-customer tabs ----
-// Each tab holds its own independent cart, so the cashier can start a
-// second (or third) customer's order without losing the first one.
-// Tabs are intentionally IN-MEMORY ONLY — nothing is written to
-// localStorage, so every page refresh (or navigating away and back)
-// always starts clean with a single empty "Mijoz 1" tab. This avoids a
-// stale/forgotten cart silently reappearing for the wrong customer.
+// Each tab holds its own independent cart. Tabs are IN-MEMORY ONLY so a
+// page refresh always starts clean with a single empty "Mijoz 1" tab.
 
 let tabs = [{ id: 1, name: 'Mijoz 1', cart: [] }];
 let activeTabId = 1;
@@ -447,9 +484,8 @@ function refreshAllBadges() {
 }
 
 // ---- Stock helpers ----
-// Reads the currently known stock for a barcode from the product card's
-// data-qty attribute. Returns Infinity if unknown/unparsable so products
-// without a valid qty are never blocked by mistake.
+// Returns Infinity if unknown/unparsable so products without a valid qty
+// are never blocked by mistake.
 function getCardStock(barcode) {
     const card = document.querySelector(`#productGrid [data-barcode="${barcode}"]`);
     if (!card) return Infinity;
@@ -462,7 +498,7 @@ function getCardStock(barcode) {
 // greyed out; it counts toward the total but is NOT submitted to the server).
 const round3 = n => Math.round(n * 1000) / 1000;
 function splitQty(barcode, total) {
-    const stock = Math.max(getCardStock(barcode), 0);   // Infinity if unknown
+    const stock = Math.max(getCardStock(barcode), 0);
     const inStock = round3(Math.min(total, stock));
     const over = round3(total - inStock);
     return { inStock, over };
@@ -502,10 +538,8 @@ function changeQty(barcode, delta) {
     renderCart();
     updateCardBadge(barcode);
     saveTabs();
-    // renderCart() replaces the DOM node for the button we just clicked
-    // (it rebuilds #cartItems via innerHTML), which drops focus to
-    // <body>. Re-focus the search box so the barcode scanner keeps
-    // working without the cashier having to click back into it.
+    // renderCart() replaces the clicked button's DOM node, dropping focus to
+    // <body>. Re-focus the search box so the barcode scanner keeps working.
     refocusSearch();
 }
 
@@ -575,6 +609,10 @@ function cartRowHtml(item, part, isFirst, isLast) {
     </div>`;
 }
 
+function cartTotal() {
+    return getActiveCart().reduce((s, c) => s + (c.unit === 'kg' ? c.price * c.weight : c.price * c.qty), 0);
+}
+
 function renderCart() {
     renderTabs();
 
@@ -599,9 +637,7 @@ function renderCart() {
             return parts.map((p, i) => cartRowHtml(item, p, i === 0, i === parts.length - 1)).join('');
         }).join('');
 
-        // Wire up "Tahrirlash" buttons without inline JS string interpolation,
-        // so product names/barcodes with quotes or special characters can't
-        // break the generated markup.
+        // Wire up "Tahrirlash" buttons without inline JS string interpolation.
         el.querySelectorAll('.qty-edit-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const barcode = btn.dataset.editBarcode;
@@ -612,16 +648,15 @@ function renderCart() {
         });
     }
 
-    const total = cart.reduce((s, c) => s + (c.unit === 'kg' ? c.price * c.weight : c.price * c.qty), 0);
+    const total = cartTotal();
 
     document.getElementById('totalAmt').textContent = fmt(total);
     document.getElementById('chargeAmt').textContent = `( ${fmt(total)} )`;
     document.getElementById('chargeBtn').disabled = cart.length === 0;
 }
 
-// Escape helpers so values coming from product data (names, barcodes) can
-// never break out of an HTML attribute or a JS string literal we build
-// dynamically in template strings above.
+// Escape helpers so values coming from product data can never break out of
+// an HTML attribute or a JS string literal built in template strings above.
 function escapeHtml(str) {
     return String(str)
         .replace(/&/g, '&amp;')
@@ -714,10 +749,8 @@ const allCards = () => document.querySelectorAll('#productGrid .product-card');
 
 function filterGrid(raw) {
     const term = raw.trim().toLowerCase();
-    // If the term looks like a product code/barcode (digits only, possibly
-    // with leading zeros), match it EXACTLY against the barcode so that
-    // e.g. "001" never matches "1001". Otherwise fall back to partial
-    // name matching (and partial barcode matching) as before.
+    // Digits-only terms match the barcode EXACTLY (so "001" never matches
+    // "1001"). Otherwise partial name / barcode matching.
     const isCodeLike = /^\d+$/.test(term);
     let visibleCount = 0;
     allCards().forEach(card => {
@@ -739,10 +772,8 @@ function filterGrid(raw) {
 searchInput.addEventListener('input', e => filterGrid(e.target.value));
 
 // ---- Duplicate-scan guard ----
-// Barcode scanners submit via a fast keystroke burst ending in Enter. If the
-// same code is scanned twice within DUPLICATE_SCAN_WINDOW_MS (e.g. the
-// cashier double-triggers the scanner, or it double-fires on one trigger
-// pull), the second scan is ignored so the item isn't added to the cart twice.
+// If the same code is scanned twice within DUPLICATE_SCAN_WINDOW_MS the
+// second scan is ignored so the item isn't added to the cart twice.
 const DUPLICATE_SCAN_WINDOW_MS = 800;
 let lastScanCode = null;
 let lastScanTime = 0;
@@ -751,12 +782,10 @@ searchInput.addEventListener('keydown', e => {
     if (e.key !== 'Enter') return;
     e.preventDefault();
     const raw = searchInput.value.trim();
-    if (!raw) return;
+    if (!raw) { openPayModal(); return; }   // Enter on empty field = go to payment
 
     const now = Date.now();
     if (raw === lastScanCode && (now - lastScanTime) < DUPLICATE_SCAN_WINDOW_MS) {
-        // Same code scanned again too quickly — ignore it, but still clear
-        // the input so the scanner's next scan starts from a clean field.
         searchInput.value = '';
         filterGrid('');
         return;
@@ -768,7 +797,7 @@ searchInput.addEventListener('keydown', e => {
 
     if (!card && !/^\d+$/.test(raw)) {
         // Only fall back to "single visible match" for non-numeric (name)
-        // searches. For numeric codes we require an exact barcode match.
+        // searches. Numeric codes require an exact barcode match.
         const visible = [...allCards()].filter(c => !c.classList.contains('hidden'));
         if (visible.length === 1) card = visible[0];
     }
@@ -787,6 +816,7 @@ searchInput.addEventListener('keydown', e => {
 
 function refocusSearch() {
     if (document.getElementById('weightModal').dataset.show === 'true') return;
+    if (payModalOpen()) return;
     searchInput.focus();
 }
 
@@ -827,8 +857,7 @@ function updateStockDisplay(productId, qty) {
     const label = card.querySelector('.stock-label');
     if (!label) return;
 
-    // Keep data-qty in sync so subsequent add-to-cart stock checks use
-    // the freshly updated stock number rather than the stale page value.
+    // Keep data-qty in sync so later stock checks use the fresh number.
     card.dataset.qty = qty;
 
     const isKg = label.dataset.unit === 'kg';
@@ -838,9 +867,57 @@ function updateStockDisplay(productId, qty) {
     label.classList.toggle('text-ink-500', qtyNum !== 0);
 }
 
+// ---- Payment ----
+const PAY_LABELS = { cash: 'Naqd', card: 'Karta', qr: 'QR' };
+const PAY_ORDER  = ['cash', 'card', 'qr'];
+let payMethod = 'cash';
+let lastPayMethod = 'cash';   // in-memory only, same philosophy as tabs
+
+const payModalOpen = () => document.getElementById('payModal').dataset.show === 'true';
+
+function openPayModal(method) {
+    if (getActiveCart().length === 0 || isSubmittingSale) return;
+    document.getElementById('payTotal').textContent = fmt(cartTotal());
+    const modal = document.getElementById('payModal');
+    modal.dataset.show = 'true';
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+    if (document.activeElement) document.activeElement.blur();
+    selectPayMethod(method || lastPayMethod);
+}
+
+function closePayModal() {
+    const modal = document.getElementById('payModal');
+    modal.dataset.show = 'false';
+    modal.classList.add('opacity-0', 'pointer-events-none');
+    refocusSearch();
+}
+
+function selectPayMethod(m) {
+    payMethod = m;
+    document.querySelectorAll('.pay-method-btn').forEach(btn => {
+        btn.dataset.selected = btn.dataset.method === m ? 'true' : 'false';
+    });
+}
+
+function cyclePayMethod(dir) {
+    const i = PAY_ORDER.indexOf(payMethod);
+    selectPayMethod(PAY_ORDER[(i + dir + PAY_ORDER.length) % PAY_ORDER.length]);
+}
+
+function confirmPayment() {
+    closePayModal();
+    submitSale(payMethod);
+}
+
+// F2/F3/F4 from the main screen: pay immediately, no window
+function quickPay(method) {
+    if (getActiveCart().length === 0) return;
+    submitSale(method);
+}
+
 let isSubmittingSale = false;
 
-function submitSale() {
+function submitSale(method = lastPayMethod) {
     const tab = getActiveTab();
     if (tab.cart.length === 0 || isSubmittingSale) return;
 
@@ -865,7 +942,10 @@ function submitSale() {
             "Content-Type": "application/json",
             "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
         },
-        body: JSON.stringify({ items: buildCartPayload() })
+        body: JSON.stringify({
+            items: buildCartPayload(),
+            paid_by: method        // 'cash' | 'card' | 'qr'
+        })
     })
     .then(r => {
         if (!r.ok) throw new Error('Request failed');
@@ -877,7 +957,8 @@ function submitSale() {
             return;
         }
 
-        showToast("Savdo yakunlandi - " + fmt(data.sale_total));
+        lastPayMethod = method;
+        showToast(`Savdo yakunlandi (${PAY_LABELS[method]}) - ` + fmt(data.sale_total));
 
         const barcodes = tab.cart.map(c => c.barcode);
         finishTabAfterSale();
@@ -901,25 +982,45 @@ function submitSale() {
     })
     .finally(() => {
         isSubmittingSale = false;
-        // renderCart() already disables the button when the cart is empty (success path);
-        // this line covers the error path, where items remain in the cart.
+        // renderCart() already disables the button when the cart is empty
+        // (success path); this covers the error path.
         chargeBtn.disabled = getActiveCart().length === 0;
     });
 }
 
 // ---- Keyboard shortcuts (single listener — do not add a second one) ----
-// F1            — charge / submit sale
-// ArrowRight    — next tab, or create a new tab if already on the last one
-// ArrowLeft     — previous tab
-// Delete / Backspace — close current tab (ignored while typing in search)
+// Main screen:
+//   F1 / Enter (empty search) — open payment window
+//   F2 / F3 / F4              — pay instantly: Naqd / Karta / QR
+//   ArrowRight / ArrowLeft    — next (or new) / previous tab
+//   Delete / Backspace        — close current tab (ignored while typing in search)
+// Payment window:
+//   1/N, 2/K, 3/Q or F2/F3/F4 — choose method
+//   ArrowLeft / ArrowRight    — cycle method
+//   Enter / F1                — confirm      Esc — cancel
 document.addEventListener('keydown', e => {
     if (document.getElementById('weightModal').dataset.show === 'true') return;
 
-    if (e.key === 'F1') {
+    // ---- Payment window open ----
+    if (payModalOpen()) {
+        const k = e.key.toLowerCase();
+
+        if (e.key === 'Escape')                  { e.preventDefault(); closePayModal(); return; }
+        if (e.key === 'Enter' || e.key === 'F1') { e.preventDefault(); confirmPayment(); return; }
+        if (e.key === 'F2' || k === '1' || k === 'n') { e.preventDefault(); selectPayMethod('cash'); return; }
+        if (e.key === 'F3' || k === '2' || k === 'k') { e.preventDefault(); selectPayMethod('card'); return; }
+        if (e.key === 'F4' || k === '3' || k === 'q') { e.preventDefault(); selectPayMethod('qr');   return; }
+        if (e.key === 'ArrowRight') { e.preventDefault(); cyclePayMethod(1);  return; }
+        if (e.key === 'ArrowLeft')  { e.preventDefault(); cyclePayMethod(-1); return; }
         e.preventDefault();
-        if (!document.getElementById('chargeBtn').disabled) submitSale();
-        return;
+        return;   // block tab-switching / delete while paying
     }
+
+    // ---- Main screen ----
+    if (e.key === 'F1') { e.preventDefault(); openPayModal(); return; }
+    if (e.key === 'F2') { e.preventDefault(); quickPay('cash'); return; }
+    if (e.key === 'F3') { e.preventDefault(); quickPay('card'); return; }
+    if (e.key === 'F4') { e.preventDefault(); quickPay('qr');   return; }
 
     if (e.key === 'ArrowRight') {
         e.preventDefault();
@@ -940,7 +1041,7 @@ document.addEventListener('keydown', e => {
     }
 
     if (e.key === 'Delete' || e.key === 'Backspace') {
-        // Don't hijack normal text deletion while the cashier is typing in search
+        // Don't hijack normal text deletion while typing in search
         if (document.activeElement === searchInput) return;
         e.preventDefault();
         closeTab(activeTabId);
@@ -948,22 +1049,13 @@ document.addEventListener('keydown', e => {
     }
 });
 
-// init
-loadTabs();
-renderCart();
-refreshAllBadges();
-updateClock();
-setInterval(updateClock, 1000);
-searchInput.focus();
-// ---- Pin Product Function ----
-// ---- Pin Product Function ----
+// ---- Pin Product ----
 function pinProduct(event, productId) {
-    // Karta bosilgandagi asosiy hodisani to'xtatish (savatga tushib ketmasligi uchun)
+    // Don't let the click bubble to the card (would add it to the cart)
     event.stopPropagation();
-    
+
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-    // Backendga so'rov yuborish
     fetch(`/products/${productId}/pin/`, {
         method: "POST",
         headers: {
@@ -973,7 +1065,6 @@ function pinProduct(event, productId) {
     })
     .then(r => {
         if (!r.ok) throw new Error("Xatolik yuz berdi");
-        
         window.location.reload();
     })
     .catch(err => {
@@ -982,6 +1073,14 @@ function pinProduct(event, productId) {
         refocusSearch();
     });
 }
+
+// init
+loadTabs();
+renderCart();
+refreshAllBadges();
+updateClock();
+setInterval(updateClock, 1000);
+searchInput.focus();
 </script>
 </body>
 </html>

@@ -102,6 +102,17 @@ def dashboard(request):
     #x-report
     today_sales = Sale.objects.filter(created_at__range=(today_midnight, now))
 
+    today_sales_payment_methods = today_sales.values("paid_by").annotate(total=Sum("total"))
+
+    payment_methods_totals = {"cash": 0, "card": 0, "qr": 0}
+    for i in today_sales_payment_methods:
+        method = i['paid_by'] or 'cash'
+        if method in payment_methods_totals:
+            payment_methods_totals[method] += int(i['total'])
+
+    print(payment_methods_totals)
+    print("="*30)
+
 
     #sales by hour
     hour_totals_qs = (today_sales.annotate(hour=ExtractHour('created_at'))
@@ -192,6 +203,8 @@ def dashboard(request):
     "localtime": now,
     "active_products_vendor_cost": active_products_vendor_cost,
     "active_products_sales_value": active_products_sales_value,
+
+    "payment_methods_totals": payment_methods_totals
 }
     return render(request, "dashboard.html", context)
 
@@ -242,13 +255,14 @@ def point_of_sale(request):
                         price=qty * price,
                         qty=float(qty),
                         profit=float((product.sales_price - product.vendor_cost) * qty),
+                        
                     )
 
                     product.qty = round(product.qty - qty, 3)
                     product.save()
 
                     sale_total += qty * price
-
+                sale.paid_by = payload.get("paid_by")
                 sale.total = sale_total
                 sale.save()
 
