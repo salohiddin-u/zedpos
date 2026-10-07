@@ -867,6 +867,65 @@ function updateStockDisplay(productId, qty) {
     label.classList.toggle('text-ink-500', qtyNum !== 0);
 }
 
+// ---- QR window ----
+// The popup MUST be opened synchronously inside the user's click/key event
+// (before any fetch), otherwise browsers block it. It is then filled with the
+// QR image once Django returns `qr_url`.
+let qrWindow = null;
+
+function openQrWindow() {
+    const w = 420, h = 560;
+    const left = Math.round(window.screenX + (window.outerWidth - w) / 2);
+    const top  = Math.round(window.screenY + (window.outerHeight - h) / 2);
+    // Same window name => reuses the window if it is already open
+    qrWindow = window.open('', 'karavanQr',
+        `width=${w},height=${h},left=${left},top=${top},resizable=yes`);
+    if (!qrWindow) return;
+
+    const d = qrWindow.document;
+    d.open();
+    d.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>QR to'lov</title></head>
+        <body style="margin:0;font-family:sans-serif;background:#FAF7F1;color:#241C14;
+                     display:flex;align-items:center;justify-content:center;height:100vh;">
+            <p>Yuklanmoqda...</p>
+        </body></html>`);
+    d.close();
+}
+
+function showQrInWindow(url, total) {
+    if (!qrWindow || qrWindow.closed) openQrWindow();   // fallback if cashier closed it
+    if (!qrWindow) {
+        showToast("QR oynasini ochib bo'lmadi (popup bloklangan)", 'error');
+        return;
+    }
+
+    const d = qrWindow.document;
+    d.body.innerHTML = '';
+    d.body.style.cssText = 'margin:0;font-family:sans-serif;background:#FAF7F1;color:#241C14;' +
+        'display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;';
+
+    const title = d.createElement('h2');
+    title.textContent = "QR orqali to'lang. Paynet Xolis";
+
+    const img = d.createElement('img');
+    img.src = url;
+    img.alt = 'QR';
+    img.style.cssText = 'width:320px;height:320px;object-fit:contain;background:#fff;padding:12px;' +
+        'border-radius:12px;border:1px solid #E6D9C1;';
+
+    const amt = d.createElement('div');
+    amt.textContent = fmt(total);
+    amt.style.cssText = 'font-family:monospace;font-size:28px;font-weight:700;';
+
+    d.body.append(title, img, amt);
+    qrWindow.focus();
+}
+
+function closeQrWindow() {
+    if (qrWindow && !qrWindow.closed) qrWindow.close();
+    qrWindow = null;
+}
+
 // ---- Payment ----
 const PAY_LABELS = { cash: 'Naqd', card: 'Karta', qr: 'QR' };
 const PAY_ORDER  = ['cash', 'card', 'qr'];
@@ -936,6 +995,11 @@ function submitSale(method = lastPayMethod) {
     const chargeBtn = document.getElementById('chargeBtn');
     chargeBtn.disabled = true;
 
+    // Capture the total now: the cart is cleared after a successful sale.
+    const saleTotalForQr = cartTotal();
+    // Must be synchronous (before fetch) so popup blockers allow it.
+    if (method === 'qr') openQrWindow();
+
     fetch("{% url 'pos' %}", {
         method: "POST",
         headers: {
@@ -953,12 +1017,22 @@ function submitSale(method = lastPayMethod) {
     })
     .then(data => {
         if (data.message) {
+            if (method === 'qr') closeQrWindow();
             showToast(data.message, 'error');
             return;
         }
 
         lastPayMethod = method;
         showToast(`Savdo yakunlandi (${PAY_LABELS[method]}) - ` + fmt(data.sale_total));
+
+        if (method === 'qr') {
+            if (data.qr_url) {
+                showQrInWindow(data.qr_url, data.sale_total ?? saleTotalForQr);
+            } else {
+                closeQrWindow();
+                showToast("QR manzili kelmadi", 'error');
+            }
+        }
 
         const barcodes = tab.cart.map(c => c.barcode);
         finishTabAfterSale();
@@ -974,10 +1048,12 @@ function submitSale(method = lastPayMethod) {
 
         searchInput.value = '';
         filterGrid('');
-        refocusSearch();
+        // Don't pull focus back from the QR window while it is being shown
+        if (method !== 'qr') refocusSearch();
     })
     .catch(err => {
         console.error(err);
+        if (method === 'qr') closeQrWindow();
         showToast("Savdoni yuborib bo'lmadi", 'error');
     })
     .finally(() => {
