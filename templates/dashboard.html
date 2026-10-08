@@ -14,10 +14,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="{% url 'manifest' %}">
     <meta name="theme-color" content="#211A14">
-    <link rel="apple-touch-icon" href="/static/icons/icon-192-v2.png">
+
     <script>
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register("{% url 'service_worker' %}");
+        navigator.serviceWorker.register("{% url 'service_worker' %}")
+        .then(reg => console.log('SW Registered'))
+        .catch(err => console.error('SW Registration failed', err));
     }
     </script>
 
