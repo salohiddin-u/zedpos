@@ -1,3 +1,4 @@
+{% load l10n %}
 {% load static %}
 <!DOCTYPE html>
 <html lang="uz">
@@ -8,12 +9,11 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="{% url 'manifest' %}">
     <link rel="icon" href="{% static 'icons/icon.png' %}" type="image/x-icon">
-
     <meta name="theme-color" content="#211A14">
 
     <script>
@@ -28,8 +28,6 @@
                 extend: {
                     fontFamily: { sans: ['Manrope', 'sans-serif'] },
                     colors: {
-                        /* Karavan — desert / caravan palette. Warm sand, deep tent-charcoal,
-                           copper as the single accent, sage + rust used sparingly for signal. */
                         dune:    { 50: '#FAF7F1', 100: '#F3ECDF', 200: '#E6D9C1', 300: '#D3BE97' },
                         tent:    { 900: '#1E1812', 800: '#241D16', 700: '#2E251C' },
                         ink:     { 900: '#241C14', 700: '#4A4034', 500: '#8A7D6C', 400: '#A69A87' },
@@ -47,7 +45,7 @@
 
     <style>
         body { font-family: 'Manrope', sans-serif; }
-
+        .font-mono { font-family: 'IBM Plex Mono', monospace; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #D3BE97; border-radius: 999px; }
@@ -55,12 +53,8 @@
 
         .nav-active { position: relative; }
         .nav-active::before {
-            content: '';
-            position: absolute;
-            left: -16px; top: 6px; bottom: 6px;
-            width: 3px;
-            border-radius: 999px;
-            background: #DE9A56;
+            content: ''; position: absolute; left: -16px; top: 6px; bottom: 6px;
+            width: 3px; border-radius: 999px; background: #DE9A56;
         }
 
         .sort-btn { display: inline-flex; align-items: center; gap: 0.25rem; cursor: pointer; user-select: none; }
@@ -68,23 +62,26 @@
         .sort-arrow { font-size: 0.65rem; opacity: 0.3; }
         .sort-btn[data-active="true"] .sort-arrow { opacity: 1; color: #C1692F; }
 
-        .page-btn[data-active="true"] {
-            background-color: #C1692F;
-            color: #FFFFFF;
-            border-color: #C1692F;
-        }
+        .page-btn[data-active="true"] { background-color: #C1692F; color: #fff; border-color: #C1692F; }
+        .filter-chip[data-active="true"] { background: #C1692F; color: #fff; border-color: #C1692F; }
+        .stock-bar { transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+        .mode-btn[data-selected="true"] { border-color: #C1692F; background: #FBF1E8; box-shadow: 0 0 0 2px #DE9A56; }
+
+        #toast { transition: transform 0.35s ease, opacity 0.35s ease; }
+        #toast[data-show="false"] { transform: translateY(-16px); opacity: 0; pointer-events: none; }
+        #toast[data-show="true"]  { transform: translateY(0); opacity: 1; }
+        #toast[data-variant="error"] { background-color: #cb311d; }
+
+        @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
     </style>
 </head>
 
 <body class="bg-dune-50 text-ink-900 antialiased h-screen flex flex-col md:flex-row overflow-hidden">
 
-    <!-- MOBIL UCHUN TOP-BAR (HAMBURGER MENYU) -->
     <div class="md:hidden bg-tent-900 text-dune-50 px-4 py-3 flex items-center justify-between shrink-0 border-b border-white/10">
         <div class="flex items-center gap-3">
             <button type="button" onclick="toggleSidebar()" aria-label="Open Menu" class="p-2 text-dune-200 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-copper-400 transition">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
-                </svg>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path></svg>
             </button>
             <div class="flex items-center gap-2">
                 <img src="{% static 'icons/icon.png' %}" alt="" class="w-7 h-7 rounded-md">
@@ -97,10 +94,8 @@
         <span class="text-[11px] font-medium text-dune-200 bg-white/5 px-3 py-1 rounded-full border border-white/10">Mahsulotlar</span>
     </div>
 
-    <!-- MOBIL MENYU FONI -->
     <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-tent-900/70 z-40 hidden backdrop-blur-sm transition-opacity md:hidden"></div>
 
-    <!-- YON MENYU (SIDEBAR) -->
     <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-tent-900 text-dune-100 flex flex-col shrink-0 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
         <div class="p-5 flex justify-between items-center border-b border-white/[0.06] md:border-b-0">
             <div class="flex items-center gap-2.5">
@@ -111,9 +106,7 @@
                 </div>
             </div>
             <button type="button" onclick="toggleSidebar()" class="md:hidden p-2 text-dune-300 hover:text-white rounded-lg">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>
 
@@ -121,124 +114,136 @@
             <p class="px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-dune-300/50 mb-2 mt-1">Boshqarish</p>
 
             <a href="{% url 'dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
-                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                </svg>
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                 Boshqaruv paneli
             </a>
             <a href="{% url 'pos' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
-                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M5 6h14a1 1 0 011 1v11a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1zm3 8h4"></path>
-                </svg>
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M5 6h14a1 1 0 011 1v11a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1zm3 8h4"></path></svg>
                 Kassa
             </a>
             <a href="{% url 'products' %}" class="nav-active flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold bg-white/[0.06] text-white transition">
-                <svg class="w-[18px] h-[18px] shrink-0 text-copper-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                </svg>
+                <svg class="w-[18px] h-[18px] shrink-0 text-copper-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
                 Mahsulotlar
             </a>
             <a href="{% url 'supplier_payments' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
-                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5V9a1 1 0 011-1h9l4 4v4.5a1 1 0 01-1 1H4a1 1 0 01-1-1z"></path>
-                    <circle cx="7.5" cy="17.5" r="1.5" stroke-width="1.8"></circle>
-                    <circle cx="16.5" cy="17.5" r="1.5" stroke-width="1.8"></circle>
-                </svg>
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5V9a1 1 0 011-1h9l4 4v4.5a1 1 0 01-1 1H4a1 1 0 01-1-1z"></path><circle cx="7.5" cy="17.5" r="1.5" stroke-width="1.8"></circle><circle cx="16.5" cy="17.5" r="1.5" stroke-width="1.8"></circle></svg>
                 Ta'minotchi
             </a>
             <a href="{% url 'personal_expenses' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dune-200/75 hover:text-white hover:bg-white/[0.05] transition">
-                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 3h9l3 3v15a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1zm9 0v3h3M8 12h8M8 16h5"></path>
-                </svg>
+                <svg class="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 3h9l3 3v15a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1zm9 0v3h3M8 12h8M8 16h5"></path></svg>
                 Xarajatlar
             </a>
         </nav>
     </aside>
 
-    <!-- ASOSIY MASHG'ULOT MAYDONI -->
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-        
-        <!-- CONTENT CONTAINER WITH UNIFORM PADDING -->
         <div class="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-6">
-            
-            <!-- HEADER (TITLE & TOP CONTROLS) -->
-            <div class="flex flex-col gap-4 ">
-                <div class="flex items-center justify-between gap-4 flex-wrap">
-                    <div>
-                        <h1 class="text-2xl font-bold text-ink-900 leading-tight tracking-tight">Mahsulotlar</h1>
-                    </div>
-                    <a href="{% url 'product_add' %}" class="px-4 py-2.5 rounded-lg bg-copper-500 hover:bg-copper-600 text-white text-sm font-semibold transition shadow-card">
-                        + Mahsulot qo'shish
-                    </a>
-                </div>
 
-                <!-- SEARCH INPUT & RESULTS SUMMARY -->
-                <div class="flex items-center justify-between gap-3 flex-wrap">
-                    <input id="searchInput" type="text" placeholder="Nomi yoki shtrix-kod bo'yicha qidiring…"
-                        class="w-full sm:max-w-xs px-3.5 py-2 border border-dune-200 bg-white rounded-lg text-sm text-ink-900 placeholder:text-ink-400 focus:ring-2 focus:ring-copper-400 focus:border-copper-400 focus:outline-none transition" autofocus>
-                    <p id="resultsSummary" class="text-xs text-ink-500 font-mono"></p>
+            <div class="flex items-center justify-between gap-4 flex-wrap">
+                <h1 class="text-2xl font-bold text-ink-900 leading-tight tracking-tight">Mahsulotlar</h1>
+                <a href="{% url 'product_add' %}" class="px-4 py-2.5 rounded-lg bg-copper-500 hover:bg-copper-600 text-white text-sm font-semibold transition shadow-card">+ Mahsulot qo'shish</a>
+            </div>
+
+            <!-- Summary strip (faol mahsulotlar bo'yicha) -->
+            <div class="bg-white border border-dune-200 rounded-2xl shadow-card overflow-hidden">
+                <div class="grid grid-cols-2 xl:grid-cols-4 divide-dune-200/70 divide-x divide-y xl:divide-y-0">
+                    <div class="p-5">
+                        <p class="text-xs text-ink-500 font-medium">Faol mahsulotlar</p>
+                        <p id="statTotal" class="font-bold text-2xl text-ink-900 mt-1.5 tracking-tight">0</p>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-xs text-ink-500 font-medium">Kam qolgan</p>
+                        <p id="statLow" class="font-bold text-2xl text-copper-600 mt-1.5 tracking-tight">0</p>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-xs text-ink-500 font-medium">Tugagan</p>
+                        <p id="statOut" class="font-bold text-2xl text-rust-500 mt-1.5 tracking-tight">0</p>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-xs text-ink-500 font-medium">Ombor qiymati (tannarx)</p>
+                        <p id="statValue" class="font-bold text-2xl text-ink-900 mt-1.5 tracking-tight">0 so'm</p>
+                        <p id="statRetail" class="text-xs text-ink-400 mt-1.5">Sotish narxida: 0 so'm</p>
+                    </div>
                 </div>
             </div>
 
-            <!-- TABLE CONTAINER -->
+            <!-- Toolbar -->
+            <div class="flex flex-col gap-3">
+                <div class="flex items-center gap-3 flex-wrap">
+                    <input id="searchInput" type="text" autocomplete="off" placeholder="Nomi yoki shtrix-kod bo'yicha qidiring…" autofocus
+                        class="w-full sm:max-w-xs px-3.5 py-2 border border-dune-200 bg-white rounded-lg text-sm text-ink-900 placeholder:text-ink-400 focus:ring-2 focus:ring-copper-400 focus:border-copper-400 focus:outline-none transition">
+                    <div class="flex items-center gap-2 overflow-x-auto">
+                        <button type="button" data-filter="all" data-active="true" class="filter-chip shrink-0 text-xs font-semibold px-3.5 py-2 rounded-lg border border-dune-200 bg-white text-ink-700 hover:bg-dune-100 transition">Hammasi</button>
+                        <button type="button" data-filter="low" data-active="false" class="filter-chip shrink-0 text-xs font-semibold px-3.5 py-2 rounded-lg border border-dune-200 bg-white text-ink-700 hover:bg-dune-100 transition">Kam qolgan</button>
+                        <button type="button" data-filter="out" data-active="false" class="filter-chip shrink-0 text-xs font-semibold px-3.5 py-2 rounded-lg border border-dune-200 bg-white text-ink-700 hover:bg-dune-100 transition">Tugagan</button>
+                        <button type="button" data-filter="archived" data-active="false" class="filter-chip shrink-0 text-xs font-semibold px-3.5 py-2 rounded-lg border border-dune-200 bg-white text-ink-700 hover:bg-dune-100 transition">Arxivlangan</button>
+                    </div>
+                    <label class="sm:ml-auto flex items-center gap-2 text-xs text-ink-500 font-medium shrink-0">
+                        Kam qolish chegarasi
+                        <input id="lowThreshold" type="number" min="1" value="5" class="w-16 px-2 py-1.5 rounded-lg border border-dune-200 bg-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-copper-400">
+                    </label>
+                </div>
+                <p id="resultsSummary" class="text-xs text-ink-500 font-mono"></p>
+            </div>
+
+            <!-- Table -->
             <div class="bg-white border border-dune-200 rounded-2xl shadow-card overflow-hidden flex-1 flex flex-col">
                 <div class="overflow-x-auto flex-1">
-                    <table class="w-full text-sm text-left">
+                    <table class="w-full text-sm text-left min-w-[900px]">
                         <thead class="bg-dune-100/50 border-b border-dune-200">
                             <tr>
-                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-ink-500 font-semibold">
-                                    <span class="sort-btn" data-sort-key="name" onclick="setSort('name')">Mahsulot <span class="sort-arrow">▲</span></span>
-                                </th>
-                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-ink-500 font-semibold">
-                                    <span class="sort-btn" data-sort-key="barcode" onclick="setSort('barcode')">Shtrix-kod / PLU <span class="sort-arrow">▲</span></span>
-                                </th>
-                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-ink-500 font-semibold">
-                                    <span class="sort-btn" data-sort-key="price" onclick="setSort('price')">Narx <span class="sort-arrow">▲</span></span>
-                                </th>
-                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-ink-500 font-semibold">
-                                    <span class="sort-btn" data-sort-key="qty" onclick="setSort('qty')">Zaxira <span class="sort-arrow">▲</span></span>
-                                </th>
-                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-ink-500 font-semibold">
-                                    <span class="sort-btn" data-sort-key="status" onclick="setSort('status')">Holat <span class="sort-arrow">▲</span></span>
-                                </th>
+                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-ink-500 font-semibold"><span class="sort-btn" data-sort-key="name" onclick="setSort('name')">Mahsulot <span class="sort-arrow">▲</span></span></th>
+                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-ink-500 font-semibold"><span class="sort-btn" data-sort-key="barcode" onclick="setSort('barcode')">Shtrix-kod / PLU <span class="sort-arrow">▲</span></span></th>
+                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-ink-500 font-semibold"><span class="sort-btn" data-sort-key="price" onclick="setSort('price')">Narx <span class="sort-arrow">▲</span></span></th>
+                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-ink-500 font-semibold w-56"><span class="sort-btn" data-sort-key="qty" onclick="setSort('qty')">Zaxira <span class="sort-arrow">▲</span></span></th>
+                                <th class="px-6 py-3 text-[11px] uppercase tracking-wider text-ink-500 font-semibold"><span class="sort-btn" data-sort-key="status" onclick="setSort('status')">Holat <span class="sort-arrow">▲</span></span></th>
+                                <th class="px-6 py-3 w-40"></th>
                             </tr>
                         </thead>
                         <tbody id="productsBody" class="divide-y divide-dune-100 bg-white">
                             {% for product in products %}
-                            <tr onclick="window.location.href='{% url 'product_detail' product.id %}'" class="product-row hover:bg-dune-50/80 transition cursor-pointer"
+                            <tr class="product-row hover:bg-dune-50/80 transition"
+                                data-id="{{ product.id }}"
                                 data-name="{{ product.name }}"
                                 data-barcode="{{ product.barcode }}"
-                                data-price="{{ product.sales_price }}"
-                                data-qty="{{ product.qty }}"
+                                data-price="{{ product.sales_price|unlocalize }}"
+                                data-qty="{{ product.qty|unlocalize|default:0 }}"
+                                data-cost="{{ product.vendor_price|unlocalize|default:0 }}"
+                                data-unit="{% if product.weight_based %}kg{% else %}dona{% endif %}"
                                 data-status="{% if product.active %}Active{% else %}Archived{% endif %}">
-                                <td class="px-6 py-3.5 font-medium text-ink-900 hover:text-copper-600 transition">{{ product.name }}</td>
+                                <td class="px-6 py-3.5">
+                                    <a href="{% url 'product_detail' product.id %}" class="font-medium text-ink-900 hover:text-copper-600 transition">{{ product.name }}</a>
+                                </td>
                                 <td class="px-6 py-3.5 font-mono text-ink-500">{{ product.barcode }}</td>
-                                <td class="px-6 py-3.5 font-mono text-ink-900">{{ product.sales_price }} so'm</td>
-                                <td class="px-6 py-3.5 font-mono {% if product.qty == 0 %}text-rust-500 font-semibold{% else %}text-ink-900{% endif %}">
-                                    {% if product.weight_based %}{{ product.qty }} kg{% else %}{{ product.qty | floatformat }} dona{% endif %}
+                                <td class="px-6 py-3.5 font-mono text-ink-900">{{ product.sales_price|unlocalize }} so'm</td>
+                                <td class="px-6 py-3.5">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="qty-label font-mono font-bold text-ink-900"></span>
+                                        <span class="stock-pill text-[10px] font-semibold px-2 py-0.5 rounded-full"></span>
+                                    </div>
+                                    <div class="h-1.5 rounded-full bg-dune-100 overflow-hidden mt-2"><div class="stock-bar h-full rounded-full"></div></div>
                                 </td>
                                 <td class="px-6 py-3.5">
                                     {% if product.active %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-sage-50 text-sage-500">
-                                        Faol
-                                    </span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-sage-50 text-sage-500">Faol</span>
                                     {% else %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-dune-100 text-ink-500">
-                                        Arxivlangan
-                                    </span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-dune-100 text-ink-500">Arxivlangan</span>
                                     {% endif %}
+                                </td>
+                                <td class="px-6 py-3.5 text-right">
+                                    <button type="button" onclick="openStockModal(this.closest('tr').dataset.id)"
+                                        class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-dune-200 bg-dune-50 hover:bg-copper-500 hover:text-white hover:border-copper-500 text-ink-700 transition">Qoldiq</button>
                                 </td>
                             </tr>
                             {% endfor %}
 
                             <tr id="noResultsRow" class="hidden">
-                                <td colspan="5" class="px-6 py-10 text-center text-sm text-ink-500">Qidiruvingizga mos mahsulot topilmadi.</td>
+                                <td colspan="6" class="px-6 py-10 text-center text-sm text-ink-500">Qidiruvingizga mos mahsulot topilmadi.</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <!-- PAGINATION BAR -->
                 <div id="paginationBar" class="px-6 py-3.5 bg-dune-100/50 border-t border-dune-200 flex items-center justify-between gap-3 flex-wrap">
                     <div class="flex items-center gap-2 text-xs text-ink-500">
                         <span>Sahifadagi qatorlar</span>
@@ -251,77 +256,137 @@
                     <div id="pageButtons" class="flex items-center gap-1"></div>
                 </div>
             </div>
-
         </div>
     </div>
 
+    <div id="toast" data-show="false" class="fixed top-6 left-6 md:left-[17rem] bg-tent-900 text-white px-5 py-3.5 rounded-xl shadow-lg z-[60]">
+        <span id="toastText" class="text-sm font-medium"></span>
+    </div>
+
+    <!-- Stock modal -->
+    <div id="stockModal" data-show="false" class="fixed inset-0 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+        <div onclick="closeStockModal()" class="absolute inset-0 bg-tent-900/60"></div>
+        <div class="relative bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+            <div class="px-6 py-5 border-b border-dune-200">
+                <h3 id="smName" class="text-lg font-bold text-ink-900">Mahsulot</h3>
+                <p id="smMeta" class="text-xs text-ink-500 font-mono mt-1"></p>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-3 gap-3">
+                    <button type="button" data-mode="add" onclick="selectMode('add')" class="mode-btn rounded-xl border border-dune-200 py-3 text-sm font-semibold transition">Kirim</button>
+                    <button type="button" data-mode="remove" onclick="selectMode('remove')" class="mode-btn rounded-xl border border-dune-200 py-3 text-sm font-semibold transition">Chiqim</button>
+                    <button type="button" data-mode="set" onclick="selectMode('set')" class="mode-btn rounded-xl border border-dune-200 py-3 text-sm font-semibold transition">Aniq son</button>
+                </div>
+                <label class="block mt-5">
+                    <span id="smAmountLabel" class="text-xs font-semibold text-ink-700 mb-1 block">Miqdor</span>
+                    <input id="smAmount" type="number" min="0" step="0.01" inputmode="decimal" class="w-full px-3 py-2.5 rounded-lg border border-dune-200 bg-dune-50 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-copper-400 focus:border-copper-400 focus:bg-white transition">
+                </label>
+                <label class="block mt-4">
+                    <span class="text-xs font-semibold text-ink-700 mb-1 block">Izoh (ixtiyoriy)</span>
+                    <input id="smNote" type="text" maxlength="120" placeholder="Masalan: yangi partiya, singan, inventarizatsiya" class="w-full px-3 py-2.5 rounded-lg border border-dune-200 bg-dune-50 text-sm focus:outline-none focus:ring-2 focus:ring-copper-400 focus:border-copper-400 focus:bg-white transition placeholder:text-ink-400">
+                </label>
+                <div class="mt-4 flex items-baseline justify-between bg-dune-50 border border-dune-200 rounded-lg px-4 py-3">
+                    <span class="text-xs font-semibold text-ink-500">Yangi qoldiq</span>
+                    <span id="smResult" class="font-mono text-lg font-bold text-ink-900">0</span>
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button type="button" onclick="closeStockModal()" class="flex-1 py-2.5 rounded-lg border border-dune-200 bg-white hover:bg-dune-50 text-sm font-medium text-ink-700 transition">Bekor qilish <span class="font-mono text-[10px] text-ink-400">Esc</span></button>
+                    <button type="button" id="smSave" onclick="saveStock()" class="flex-1 py-2.5 rounded-lg bg-copper-500 hover:bg-copper-600 text-white text-sm font-medium transition shadow-card disabled:opacity-50">Saqlash <span class="font-mono text-[10px] opacity-80">Enter</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% csrf_token %}
+
 <script>
-    // TOGGLE SIDEBAR (Mobil menyuni ochish/yopish)
     function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-        sidebar.classList.toggle('-translate-x-full');
-        overlay.classList.toggle('hidden');
+        document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        document.getElementById('sidebarOverlay').classList.toggle('hidden');
     }
 
-    // TABLE & PAGINATION LOGIC
+    const fmt = n => Math.round(n).toLocaleString('en-US').replace(/,/g, ' ') + " so'm";
+    const fmtQty = (n, unit) => (Math.round(n * 100) / 100) + (unit === 'kg' ? ' kg' : ' dona');
+
     const tbody = document.getElementById('productsBody');
     const noResultsRow = document.getElementById('noResultsRow');
     const searchInput = document.getElementById('searchInput');
     const resultsSummary = document.getElementById('resultsSummary');
     const pageSizeSelect = document.getElementById('pageSizeSelect');
     const pageButtons = document.getElementById('pageButtons');
-
     const allRows = Array.from(tbody.querySelectorAll('.product-row'));
 
-    const columnType = {
-        name: 'string',
-        barcode: 'string',
-        price: 'number',
-        qty: 'number',
-        status: 'string',
-    };
+    const columnType = { name: 'string', barcode: 'string', price: 'number', qty: 'number', status: 'string' };
 
-    let sortKey = 'name';
-    let sortDir = 1; // 1 = ascending, -1 = descending
-    let searchTerm = '';
-    let currentPage = 1;
-    let pageSize = 20;
+    let sortKey = 'name', sortDir = 1, searchTerm = '', currentPage = 1, pageSize = 20, activeFilter = 'all';
+
+    const getThreshold = () => Math.max(parseFloat(document.getElementById('lowThreshold').value) || 5, 1);
+    const isActive = row => row.dataset.status === 'Active';
+
+    // Stock status only applies to active products
+    function stockStatus(row) {
+        if (!isActive(row)) return 'archived';
+        const qty = parseFloat(row.dataset.qty) || 0;
+        if (qty <= 0) return 'out';
+        return qty <= getThreshold() ? 'low' : 'ok';
+    }
+
+    function paintRow(row) {
+        const qty = parseFloat(row.dataset.qty) || 0;
+        const st = stockStatus(row);
+        row.dataset.stock = st;
+        row.querySelector('.qty-label').textContent = fmtQty(qty, row.dataset.unit);
+        row.querySelector('.qty-label').className = 'qty-label font-mono font-bold ' + (qty <= 0 ? 'text-rust-500' : 'text-ink-900');
+
+        const pill = row.querySelector('.stock-pill');
+        const bar = row.querySelector('.stock-bar');
+        if (st === 'archived') {
+            pill.textContent = '';
+            pill.className = 'stock-pill';
+            bar.style.width = '0';
+            return;
+        }
+        pill.className = 'stock-pill text-[10px] font-semibold px-2 py-0.5 rounded-full ' +
+            (st === 'out' ? 'bg-rust-50 text-rust-500' : st === 'low' ? 'bg-copper-400/15 text-copper-600' : 'bg-sage-50 text-sage-500');
+        pill.textContent = st === 'out' ? 'Tugagan' : st === 'low' ? 'Kam qolgan' : 'Yetarli';
+        bar.style.width = Math.min(qty / (getThreshold() * 4), 1) * 100 + '%';
+        bar.style.background = st === 'out' ? '#B85C45' : st === 'low' ? '#DE9A56' : '#6E8F6C';
+    }
+
+    function updateStats() {
+        let total = 0, low = 0, out = 0, value = 0, retail = 0;
+        allRows.forEach(row => {
+            if (!isActive(row)) return;
+            const qty = parseFloat(row.dataset.qty) || 0;
+            total++;
+            value += qty * (parseFloat(row.dataset.cost) || 0);
+            retail += qty * (parseFloat(row.dataset.price) || 0);
+            if (row.dataset.stock === 'low') low++;
+            if (row.dataset.stock === 'out') out++;
+        });
+        document.getElementById('statTotal').textContent = total;
+        document.getElementById('statLow').textContent = low;
+        document.getElementById('statOut').textContent = out;
+        document.getElementById('statValue').textContent = fmt(value);
+        document.getElementById('statRetail').textContent = 'Sotish narxida: ' + fmt(retail);
+    }
 
     function setSort(key) {
-        if (sortKey === key) {
-            sortDir *= -1;
-        } else {
-            sortKey = key;
-            sortDir = 1;
-        }
+        if (sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = 1; }
         currentPage = 1;
         render();
     }
 
     function compareRows(a, b) {
-        const type = columnType[sortKey];
-        let av = a.dataset[sortKey];
-        let bv = b.dataset[sortKey];
-
-        if (type === 'number') {
-            av = parseFloat(av) || 0;
-            bv = parseFloat(bv) || 0;
-            return (av - bv) * sortDir;
-        }
-
-        av = (av || '').toLowerCase();
-        bv = (bv || '').toLowerCase();
-        if (av < bv) return -1 * sortDir;
-        if (av > bv) return 1 * sortDir;
-        return 0;
+        let av = a.dataset[sortKey], bv = b.dataset[sortKey];
+        if (columnType[sortKey] === 'number') return ((parseFloat(av) || 0) - (parseFloat(bv) || 0)) * sortDir;
+        av = (av || '').toLowerCase(); bv = (bv || '').toLowerCase();
+        return av < bv ? -sortDir : av > bv ? sortDir : 0;
     }
 
-    function matchesSearch(row) {
-        if (!searchTerm) return true;
-        const name = row.dataset.name.toLowerCase();
-        const barcode = row.dataset.barcode.toLowerCase();
-        return name.includes(searchTerm) || barcode.includes(searchTerm);
+    function matches(row) {
+        if (searchTerm && !(row.dataset.name.toLowerCase().includes(searchTerm) || row.dataset.barcode.toLowerCase().includes(searchTerm))) return false;
+        return activeFilter === 'all' || row.dataset.stock === activeFilter;
     }
 
     function render() {
@@ -334,32 +399,30 @@
             btn.querySelector('.sort-arrow').textContent = (active && sortDir === -1) ? '▼' : '▲';
         });
 
-        const filtered = sorted.filter(matchesSearch);
+        const filtered = sorted.filter(matches);
         noResultsRow.classList.toggle('hidden', filtered.length !== 0);
 
         const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
         if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * pageSize, end = start + pageSize;
 
-        const start = (currentPage - 1) * pageSize;
-        const end = start + pageSize;
+        allRows.forEach(row => row.classList.add('hidden'));
+        filtered.forEach((row, i) => row.classList.toggle('hidden', !(i >= start && i < end)));
 
-        allRows.forEach(row => { row.classList.add('hidden'); });
-        filtered.forEach((row, i) => {
-            row.classList.toggle('hidden', !(i >= start && i < end));
-        });
-
-        if (filtered.length === 0) {
-            resultsSummary.textContent = "0 ta natija";
-        } else {
-            resultsSummary.textContent = `${start + 1}–${Math.min(end, filtered.length)} / jami ${filtered.length}`;
-        }
-
+        resultsSummary.textContent = filtered.length === 0
+            ? '0 ta natija'
+            : `${start + 1}–${Math.min(end, filtered.length)} / jami ${filtered.length}`;
         renderPagination(totalPages);
+    }
+
+    function refreshAll() {
+        allRows.forEach(paintRow);
+        updateStats();
+        render();
     }
 
     function renderPagination(totalPages) {
         pageButtons.innerHTML = '';
-
         const makeBtn = (label, page, opts = {}) => {
             const btn = document.createElement('button');
             btn.type = 'button';
@@ -370,9 +433,7 @@
             btn.onclick = () => { currentPage = page; render(); };
             return btn;
         };
-
         pageButtons.appendChild(makeBtn('‹ Oldingi', currentPage - 1, { disabled: currentPage === 1 }));
-
         for (let p = 1; p <= totalPages; p++) {
             if (p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1) {
                 pageButtons.appendChild(makeBtn(String(p), p, { active: p === currentPage }));
@@ -383,23 +444,119 @@
                 pageButtons.appendChild(span);
             }
         }
-
         pageButtons.appendChild(makeBtn('Keyingi ›', currentPage + 1, { disabled: currentPage === totalPages }));
     }
 
-    searchInput.addEventListener('input', e => {
-        searchTerm = e.target.value.trim().toLowerCase();
-        currentPage = 1;
-        render();
+    searchInput.addEventListener('input', e => { searchTerm = e.target.value.trim().toLowerCase(); currentPage = 1; render(); });
+    pageSizeSelect.addEventListener('change', e => { pageSize = parseInt(e.target.value, 10); currentPage = 1; render(); });
+    document.getElementById('lowThreshold').addEventListener('input', () => { currentPage = 1; refreshAll(); });
+    document.querySelectorAll('.filter-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+            activeFilter = btn.dataset.filter;
+            document.querySelectorAll('.filter-chip').forEach(b => b.dataset.active = (b === btn) ? 'true' : 'false');
+            currentPage = 1;
+            render();
+        });
     });
 
-    pageSizeSelect.addEventListener('change', e => {
-        pageSize = parseInt(e.target.value, 10);
-        currentPage = 1;
-        render();
+    // ---- Toast ----
+    let toastTimer;
+    function showToast(text, variant) {
+        const toast = document.getElementById('toast');
+        document.getElementById('toastText').textContent = text;
+        if (variant) toast.dataset.variant = variant; else delete toast.dataset.variant;
+        toast.dataset.show = 'true';
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { toast.dataset.show = 'false'; }, 3200);
+    }
+
+    // ---- Stock modal ----
+    let smRow = null, smMode = 'add', isSaving = false;
+    const stockModalOpen = () => document.getElementById('stockModal').dataset.show === 'true';
+
+    function openStockModal(id) {
+        smRow = allRows.find(r => r.dataset.id === String(id));
+        if (!smRow) return;
+        document.getElementById('smName').textContent = smRow.dataset.name;
+        document.getElementById('smMeta').textContent = `${smRow.dataset.barcode} · hozir ${fmtQty(parseFloat(smRow.dataset.qty) || 0, smRow.dataset.unit)}`;
+        document.getElementById('smAmount').value = '';
+        document.getElementById('smNote').value = '';
+        selectMode('add');
+        const modal = document.getElementById('stockModal');
+        modal.dataset.show = 'true';
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        document.getElementById('smAmount').focus();
+    }
+
+    function closeStockModal() {
+        const modal = document.getElementById('stockModal');
+        modal.dataset.show = 'false';
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        smRow = null;
+    }
+
+    function selectMode(m) {
+        smMode = m;
+        document.querySelectorAll('.mode-btn').forEach(b => b.dataset.selected = (b.dataset.mode === m) ? 'true' : 'false');
+        document.getElementById('smAmountLabel').textContent =
+            m === 'add' ? "Qo'shiladigan miqdor" : m === 'remove' ? 'Ayiriladigan miqdor' : 'Haqiqiy qoldiq';
+        previewResult();
+    }
+
+    function computeNewQty() {
+        if (!smRow) return 0;
+        const cur = parseFloat(smRow.dataset.qty) || 0;
+        const amt = parseFloat(document.getElementById('smAmount').value);
+        if (isNaN(amt)) return cur;
+        if (smMode === 'add') return cur + amt;
+        if (smMode === 'remove') return Math.max(cur - amt, 0);
+        return amt;
+    }
+
+    function previewResult() {
+        if (smRow) document.getElementById('smResult').textContent = fmtQty(computeNewQty(), smRow.dataset.unit);
+    }
+    document.getElementById('smAmount').addEventListener('input', previewResult);
+
+    function saveStock() {
+        if (!smRow || isSaving) return;
+        const amount = parseFloat(document.getElementById('smAmount').value);
+        if (isNaN(amount) || amount < 0) { showToast('Miqdorni kiriting', 'error'); return; }
+
+        isSaving = true;
+        const btn = document.getElementById('smSave');
+        btn.disabled = true;
+        const row = smRow;
+
+        fetch(`/products/${row.dataset.id}/adjust/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ mode: smMode, amount, note: document.getElementById('smNote').value.trim() })
+        })
+        .then(r => { if (!r.ok) throw new Error('Request failed'); return r.json(); })
+        .then(data => {
+            row.dataset.qty = data.qty !== undefined ? data.qty : computeNewQty();
+            closeStockModal();
+            refreshAll();
+            showToast('Qoldiq yangilandi');
+        })
+        .catch(err => {
+            console.error(err);
+            showToast("Qoldiqni saqlab bo'lmadi", 'error');
+        })
+        .finally(() => { isSaving = false; btn.disabled = false; });
+    }
+
+    document.addEventListener('keydown', e => {
+        if (!stockModalOpen()) return;
+        if (e.key === 'Escape') { e.preventDefault(); closeStockModal(); }
+        if (e.key === 'Enter')  { e.preventDefault(); saveStock(); }
     });
 
-    render();
+    refreshAll();
 </script>
 
 </body>

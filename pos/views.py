@@ -1,5 +1,5 @@
 from django.db.models.functions import ExtractHour
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.http import JsonResponse
 from django.db.models import Sum, Avg, Count, F, FloatField, ExpressionWrapper
 from django.utils.timezone import localtime
@@ -93,7 +93,7 @@ def dashboard(request):
             pass
 
 
-    now = localtime().now()
+    now = localtime()
     today = now.date()
     today_midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
     yesterday = today - timedelta(days=1)
@@ -109,9 +109,6 @@ def dashboard(request):
         method = i['paid_by'] or 'cash'
         if method in payment_methods_totals:
             payment_methods_totals[method] += int(i['total'])
-
-    print(payment_methods_totals)
-    print("="*30)
 
 
     #sales by hour
@@ -309,7 +306,7 @@ def product_add(request):
 
 @login_required
 def product_detail(request, product_id):
-    today = localtime().now().date()
+    today = localtime().date()
     product = Product.objects.get(id=product_id)
     week_start = today - timedelta(days=7)
     start_date = today - timedelta(days=15)
@@ -318,7 +315,7 @@ def product_detail(request, product_id):
     week_sale_history = SaleItem.objects.filter(sale__created_at__date__range=(week_start, today), product__id=product_id).order_by("-sale__created_at")[:50]
 
     week_total_profit = SaleItem.objects.filter(sale__created_at__date__range=(week_start, today), product=product).aggregate(Sum("profit"))["profit__sum"] or 0
-    restock_history = Stock.objects.filter(created_at__date__range=(start_date, today), product=product).order_by("-created_at")[:30]
+    restock_history = Inventory.objects.filter(created_at__date__range=(start_date, today), product=product).order_by("-created_at")[:30]
     context = {
         "product": product,
         "week_qty_sold": week_qty_sold,
@@ -343,16 +340,41 @@ def unarchive_product(request, product_id):
     return redirect(f"/products/{product_id}/detail/")
 
 @login_required
-def restock(request, product_id):
-    product = Product.objects.get(id=product_id)
-    now = localtime().now()
-    if request.method == "POST":
-        qty = request.POST.get("qty")
-        product.qty += float(qty)
-        product.save()
-        Stock.objects.create(product=product, qty=qty, created_at=now)
-    return redirect(f"/products/{product_id}/detail/")
+def inventory(request, product_id):
+    try:
+        data = json.loads(request.body)
+        mode = data.get('mode')
+        amount = data.get('amount')
 
+        if mode not in ['add', 'remove', 'adjust']:
+            return JsonResponse({"message": "Noto'g'ri so'rov formati"}, status=400)
+        with transaction.atomic():
+            product = get_object_or_404(Product.objects.select_for_update(), id=product_id)
+
+            if amount is None:
+                return JsonResponse({"message": "Miqdor kiritilmagan"}, status=400)
+
+            if mode == 'add':
+                product.qty += float(amount)
+            elif mode == 'remove':
+                product.qty -= float(amount)
+            elif mode == 'adjust':
+                product.qty = float(amount)
+
+            product.save()
+            Inventory.objects.create(
+                product=product,
+                qty=float(amount),
+                created_at=localtime(),
+                mode=mode
+            )
+
+    except json.JSONDecodeError:
+        return JsonResponse({"message": "Xatolik yuz berdi"}, status=400)
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=400)
+    
+    return JsonResponse({'qty': float(product.qty)})
 
 @login_required
 def supplier_payments(request):
@@ -363,7 +385,7 @@ def supplier_payments(request):
     end = request.GET.get("end_date")
     supplier_id = request.GET.get("supplier")
 
-    now = localtime().now()
+    now = localtime()
     today = now.date()
     yesterday = today - timedelta(days=1)
     week_start = today - timedelta(days=7)

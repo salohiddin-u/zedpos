@@ -76,11 +76,11 @@ class PersonalExpense(models.Model):
     def __str__(self):
         return f"{self.amount} - {self.category}"
 
-class Stock(models.Model):
+class Inventory(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     qty = models.FloatField()
     created_at = models.DateTimeField()
-
-
+    mode = models.CharField(choices=[("add", "Add"), ("remove", "Remove"), ("adjust", "Adjust")], max_length=100, null=True, blank=True)
+    
     def __str__(self):
         return self.product.name

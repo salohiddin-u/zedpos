@@ -11,7 +11,7 @@ urlpatterns = [
     path('products/<int:product_id>/archive/', pos_views.archive_product, name="archive_product"),
     path('products/<int:product_id>/unarchive/', pos_views.unarchive_product, name="unarchive_product"),
     path('products/<int:product_id>/pin/', pos_views.pin_product, name="pin_product"),
-    path('products/<int:product_id>/restock/', pos_views.restock, name="restock"),
+    path('products/<int:product_id>/adjust/', pos_views.inventory, name="adjust_inventory"),
 
     path('suppliers/', pos_views.add_supplier, name="add_supplier"),
     path('suppliers/payments/', pos_views.supplier_payments, name="supplier_payments"),
