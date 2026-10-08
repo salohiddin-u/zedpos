@@ -45,6 +45,7 @@ def get_percent_change(new_value, old_value):
 
 
 def get_period_totals(start, end):
+    end += timedelta(days=1)
     return {
         "total_sales": Sale.objects.filter(created_at__date__range=(start, end)).aggregate(Sum("total"))["total__sum"] or 0,
         "total_profit": SaleItem.objects.filter(sale__created_at__date__range=(start, end)).aggregate(Sum("profit"))["profit__sum"] or 0,
@@ -139,7 +140,7 @@ def dashboard(request):
 
     #REPORTS
     today_period = get_period_totals(today, today)
-    yesterday_period = get_period_totals(yesterday, yesterday)
+    yesterday_period = get_period_totals(yesterday, yesterday-timedelta(days=1))
     week_period = get_period_totals(today - timedelta(days=6), today)
     month_param = request.GET.get("month")
     try:
@@ -212,6 +213,7 @@ def point_of_sale(request):
         try:
             payload = json.loads(request.body)
             cart_items = payload['items']
+            paid_by = payload.get("paid_by")
         except (json.JSONDecodeError, KeyError):
             return JsonResponse({"message": "Noto'g'ri so'rov formati"}, status=400)
 
@@ -265,8 +267,7 @@ def point_of_sale(request):
 
         except ValueError as e:
             return JsonResponse({"message": str(e)}, status=400)
-
-        return JsonResponse({
+        response = {
             "status": "ok",
             "sale_id": sale.id,
             "next_sale_id": sale.id + 1,
@@ -275,7 +276,10 @@ def point_of_sale(request):
                 str(item.product.id): item.product.qty
                 for item in SaleItem.objects.filter(sale=sale).select_related("product")
             }
-        })
+        }
+        if paid_by == "qr":
+            response["qr_url"] = "https://i.postimg.cc/ZqKzKHj1/2026-06-15-23-57-54-527139-pdf-(1).png"
+        return JsonResponse(response)
 
     context = {
         "active_products": Product.objects.filter(active=True).order_by('-pinned', 'name'),
