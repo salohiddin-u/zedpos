@@ -19,7 +19,8 @@ class Sale(models.Model):
     PAID_BY_CHOICES = [
         ('cash', 'cash'),
         ('card', 'card'),
-        ('qr', 'qr')
+        ('qr', 'qr'),
+        ('p2p', 'p2p'),
     ]
     created_at = models.DateTimeField()
     total = models.IntegerField()
@@ -84,3 +85,7 @@ class Inventory(models.Model):
     
     def __str__(self):
         return self.product.name
+
+    class Meta:
+        verbose_name_plural = "Inventory"
+        verbose_name = "Inventory"
